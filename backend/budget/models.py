@@ -42,13 +42,18 @@ class Profile(models.Model):
     
 
 class Income(models.Model):
+    SOURCE_CHOICES = (
+        ('Pocket Money', 'Pocket Money'),
+        ('Scholarship', 'Scholarship'),
+        ('Freelance Income', 'Freelance Income'),
+    )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='incomes'
     )
-
-    source = models.CharField(max_length=100)
+    
+    source = models.CharField(max_length=100, choices=SOURCE_CHOICES)
 
     amount = models.DecimalField(
         max_digits=12,
@@ -65,9 +70,18 @@ class Income(models.Model):
 
     def __str__(self):
         return f"{self.source} - {self.amount}"
-    
-    
+
 class Expense(models.Model):
+
+    CATEGORY_CHOICES = (
+        ('Food', 'Food'),
+        ('Travel', 'Travel'),
+        ('Shopping', 'Shopping'),
+        ('Education', 'Education'),
+        ('Entertainment', 'Entertainment'),
+        ('Miscellaneous', 'Miscellaneous'),
+    )
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -82,7 +96,10 @@ class Expense(models.Model):
         validators=[MinValueValidator(0.01)]
     )
 
-    category = models.CharField(max_length=100)
+    category = models.CharField(
+        max_length=100,
+        choices=CATEGORY_CHOICES
+    )
 
     expense_date = models.DateField()
 
@@ -91,6 +108,9 @@ class Expense(models.Model):
         null=True
     )
 
+    def __str__(self):
+        return f"{self.title} - {self.amount}"
+    
     def __str__(self):
         return f"{self.title} - {self.amount}"
     

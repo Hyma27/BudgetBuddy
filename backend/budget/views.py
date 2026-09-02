@@ -69,19 +69,112 @@ class ProfileView(APIView):
             'role': request.user.role,
         })        
         
-        
-
 class IncomeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        incomes = Income.objects.filter(user=request.user)
-        serializer = IncomeSerializer(incomes, many=True)
+        incomes = Income.objects.filter(
+            user=request.user
+        ).order_by('-income_date', '-id')
+
+        serializer = IncomeSerializer(
+            incomes,
+            many=True
+        )
 
         return Response(serializer.data)
 
     def post(self, request):
-        serializer = IncomeSerializer(data=request.data)
+        serializer = IncomeSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+     
+    def put(self, request, income_id):
+        try:
+            income = Income.objects.get(
+                id=income_id,
+                user=request.user
+            )
+        except Income.DoesNotExist:
+            return Response(
+                {
+                    "error": "Income not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = IncomeSerializer(
+            income,
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request, income_id):
+        try:
+            income = Income.objects.get(
+                id=income_id,
+                user=request.user
+            )
+        except Income.DoesNotExist:
+            return Response(
+                {
+                    "error": "Income not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        income.delete()
+
+        return Response(
+            {
+                "message": "Income deleted successfully"
+            },
+            status=status.HTTP_200_OK
+        )   
+class ExpenseView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        expenses = Expense.objects.filter(
+            user=request.user
+        ).order_by('-expense_date', '-id')
+
+        serializer = ExpenseSerializer(
+            expenses,
+            many=True
+        )
+
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = ExpenseSerializer(
+            data=request.data
+        )
 
         if serializer.is_valid():
             serializer.save(user=request.user)
@@ -96,32 +189,60 @@ class IncomeView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    def put(self, request, expense_id):
+        try:
+            expense = Expense.objects.get(
+                id=expense_id,
+                user=request.user
+            )
+        except Expense.DoesNotExist:
+            return Response(
+                {
+                    "error": "Expense not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-class ExpenseView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        expenses = Expense.objects.filter(user=request.user)
-        serializer = ExpenseSerializer(expenses, many=True)
-
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = ExpenseSerializer(data=request.data)
+        serializer = ExpenseSerializer(
+            expense,
+            data=request.data
+        )
 
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            serializer.save()
 
             return Response(
                 serializer.data,
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_200_OK
             )
 
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
-        )   
+        )
         
+    def delete(self, request, expense_id):
+        try:
+            expense = Expense.objects.get(
+                id=expense_id,
+                user=request.user
+            )
+        except Expense.DoesNotExist:
+            return Response(
+                {
+                    "error": "Expense not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        expense.delete()
+
+        return Response(
+            {
+                "message": "Expense deleted successfully"
+            },
+            status=status.HTTP_200_OK
+        )
         
 class BudgetView(APIView):
     permission_classes = [IsAuthenticated]

@@ -14,6 +14,7 @@ from pathlib import Path
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:5174",
 ]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
