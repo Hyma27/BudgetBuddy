@@ -466,17 +466,35 @@ const recentTransactions = [
 
       <p>{message}</p>
 
-      <hr />
+      {/* Financial Summary */}
+      <div>
+        <h2>Financial Summary</h2>
 
-      {/* Add / Update Expense */}
-      <h2>
-        {editingExpenseId !== null
-          ? "Update Expense"
-          : "Add Expense"}
-      </h2>
+        <p>
+          <strong>Total Income:</strong> ₹{totalIncome.toFixed(2)}
+        </p>
 
-      <form onSubmit={handleExpenseSubmit}>
+        <p>
+           <strong>Total Expenses:</strong> ₹{totalExpenses.toFixed(2)}
+        </p>
+
+        <p>
+           <strong>Remaining Amount:</strong> ₹{remainingAmount.toFixed(2)}
+        </p>
+     </div>
+
+    <hr />
+
+    {/* Add / Update Expense */}
+    <h2>
+      {editingExpenseId !== null
+        ? "Update Expense"
+        : "Add Expense"}
+    </h2>
+
+    <form onSubmit={handleExpenseSubmit}>
         <div>
+
           <label>Title</label>
           <br />
 
