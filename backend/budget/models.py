@@ -111,11 +111,19 @@ class Expense(models.Model):
     def __str__(self):
         return f"{self.title} - {self.amount}"
     
-    def __str__(self):
-        return f"{self.title} - {self.amount}"
     
     
 class Budget(models.Model):
+
+    CATEGORY_CHOICES = (
+        ('Food', 'Food'),
+        ('Travel', 'Travel'),
+        ('Shopping', 'Shopping'),
+        ('Education', 'Education'),
+        ('Entertainment', 'Entertainment'),
+        ('Miscellaneous', 'Miscellaneous'),
+    )
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -129,17 +137,25 @@ class Budget(models.Model):
     )
 
     category = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True
+    max_length=100,
+    choices=(
+        ('Food', 'Food'),
+        ('Travel', 'Travel'),
+        ('Shopping', 'Shopping'),
+        ('Education', 'Education'),
+        ('Entertainment', 'Entertainment'),
+        ('Miscellaneous', 'Miscellaneous'),
     )
+)
+
 
     period = models.CharField(
-        max_length=50
+        max_length=50,
+        default='Monthly'
     )
 
     def __str__(self):
-        return f"{self.user.username} - {self.amount}"
+        return f"{self.user.username} - {self.category} - {self.amount}"
     
     
 class SavingsGoal(models.Model):

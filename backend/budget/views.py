@@ -248,9 +248,34 @@ class BudgetView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        budgets = Budget.objects.filter(user=request.user)
-        serializer = BudgetSerializer(budgets, many=True)
+        budgets = Budget.objects.filter(
+            user=request.user
+        ).order_by('-id')
+
+        serializer = BudgetSerializer(
+            budgets,
+            many=True
+        )
+
         return Response(serializer.data)
+
+    def post(self, request):
+        serializer = BudgetSerializer(
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
     
 class SavingsGoalView(APIView):

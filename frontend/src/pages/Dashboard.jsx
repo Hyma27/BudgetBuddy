@@ -32,6 +32,16 @@ function Dashboard() {
     description: "",
   });
 
+  // Budget states
+const [budgets, setBudgets] = useState([]);
+const [budgetMessage, setBudgetMessage] = useState("");
+
+const [budget, setBudget] = useState({
+  amount: "",
+  category: "Food",
+  period: "Monthly",
+});
+
   // Fetch user's expenses
   const fetchExpenses = async () => {
     const token = localStorage.getItem("access_token");
@@ -96,6 +106,38 @@ function Dashboard() {
     }
   };
 
+  // Fetch user's budgets
+const fetchBudgets = async () => {
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/budget/",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setBudgets(data);
+    } else {
+      console.error("Budget error:", data);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
   // Check authentication when Dashboard opens
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -126,6 +168,8 @@ function Dashboard() {
 
           fetchExpenses();
           fetchIncomes();
+          fetchBudgets();
+
         } else {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
@@ -155,6 +199,68 @@ function Dashboard() {
       [e.target.name]: e.target.value,
     });
   };
+
+  // Handle budget input changes
+const handleBudgetChange = (e) => {
+  setBudget({
+    ...budget,
+    [e.target.name]: e.target.value,
+  });
+};
+
+// Add budget
+const handleBudgetSubmit = async (e) => {
+  e.preventDefault();
+
+  setBudgetMessage("");
+
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/budget/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          amount: budget.amount,
+          category: budget.category,
+          period: budget.period,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setBudgetMessage("Budget created successfully!");
+
+      setBudget({
+        amount: "",
+        category: "Food",
+        period: "Monthly",
+      });
+
+      fetchBudgets();
+    } else {
+      console.error("Budget error:", data);
+
+      setBudgetMessage("Failed to create budget.");
+    }
+  } catch (error) {
+    console.error(error);
+
+    setBudgetMessage("Unable to connect to the backend.");
+  }
+};
 
   // Add income
   const handleIncomeSubmit = async (e) => {
@@ -227,6 +333,8 @@ function Dashboard() {
       );
     }
   };
+
+
 
   // Add or update expense
   const handleExpenseSubmit = async (e) => {
@@ -484,6 +592,94 @@ const recentTransactions = [
      </div>
 
     <hr />
+
+{/* Budget Creation */}
+<h2>Create Monthly Budget</h2>
+
+<form onSubmit={handleBudgetSubmit}>
+  <div>
+    <label>Amount</label>
+    <br />
+
+    <input
+      type="number"
+      name="amount"
+      value={budget.amount}
+      onChange={handleBudgetChange}
+      placeholder="Enter budget amount"
+      min="0.01"
+      step="0.01"
+      required
+    />
+  </div>
+
+  <br />
+
+  <div>
+    <label>Category</label>
+    <br />
+
+    <select
+      name="category"
+      value={budget.category}
+      onChange={handleBudgetChange}
+      required
+    >
+      <option value="Food">Food</option>
+      <option value="Travel">Travel</option>
+      <option value="Shopping">Shopping</option>
+      <option value="Education">Education</option>
+      <option value="Entertainment">Entertainment</option>
+      <option value="Miscellaneous">Miscellaneous</option>
+    </select>
+  </div>
+
+  <br />
+
+  <div>
+    <label>Period</label>
+    <br />
+
+    <select
+      name="period"
+      value={budget.period}
+      onChange={handleBudgetChange}
+    >
+      <option value="Monthly">Monthly</option>
+    </select>
+  </div>
+
+  <br />
+
+  <button type="submit">
+    Create Budget
+  </button>
+
+  <p>{budgetMessage}</p>
+</form>
+
+<hr />
+
+{/* Budget History */}
+<h2>My Budgets</h2>
+
+{budgets.length === 0 ? (
+  <p>No budgets created yet.</p>
+) : (
+  <ul>
+    {budgets.map((item) => (
+      <li key={item.id}>
+        <strong>₹{Number(item.amount).toFixed(2)}</strong>
+        {" - "}
+        {item.category}
+        {" - "}
+        {item.period}
+      </li>
+    ))}
+  </ul>
+)}
+
+<hr />  
 
     {/* Add / Update Expense */}
     <h2>
