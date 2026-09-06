@@ -570,6 +570,14 @@ const recentTransactions = [
   return (
 
     <div>
+
+
+    <button onClick={() => {
+  localStorage.removeItem("access_token");
+  navigate("/login");
+}}>
+  Logout
+</button>
       <h1>Welcome to BudgetBuddy Dashboard</h1>
 
       <p>{message}</p>
