@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.contrib.auth.models import AbstractUser
 
@@ -17,8 +18,8 @@ class User(AbstractUser):
         choices=ROLE_CHOICES,
         default='student'
     )
-    
-    
+
+
 class Profile(models.Model):
     user = models.OneToOneField(
         User,
@@ -39,7 +40,7 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
-    
+
 
 class Income(models.Model):
     SOURCE_CHOICES = (
@@ -52,7 +53,7 @@ class Income(models.Model):
         on_delete=models.CASCADE,
         related_name='incomes'
     )
-    
+
     source = models.CharField(max_length=100, choices=SOURCE_CHOICES)
 
     amount = models.DecimalField(
@@ -93,7 +94,7 @@ class Expense(models.Model):
     amount = models.DecimalField(
         max_digits=12,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)]
+        validators=[MinValueValidator(Decimal('0.01'))]
     )
 
     category = models.CharField(
@@ -110,9 +111,9 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount}"
-    
-    
-    
+
+
+
 class Budget(models.Model):
 
     CATEGORY_CHOICES = (
@@ -156,8 +157,8 @@ class Budget(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.category} - {self.amount}"
-    
-    
+
+
 class SavingsGoal(models.Model):
     user = models.ForeignKey(
         User,
@@ -187,7 +188,7 @@ class SavingsGoal(models.Model):
 
     def __str__(self):
         return f"{self.goal_name} - {self.target_amount}"
-    
+
 
 class Notification(models.Model):
     user = models.ForeignKey(
@@ -212,8 +213,8 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.notification_type}"
-    
-    
+
+
 class Report(models.Model):
     user = models.ForeignKey(
         User,

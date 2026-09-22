@@ -24,8 +24,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
-    
-    
+
+
 from .models import Income
 
 
@@ -40,8 +40,8 @@ class IncomeSerializer(serializers.ModelSerializer):
             'income_date',
             'description'
         ]
-        
-        
+
+
 class ExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -53,9 +53,9 @@ class ExpenseSerializer(serializers.ModelSerializer):
             'category',
             'expense_date',
             'description'
-        ]    
-        
-        
+        ]
+
+
 class BudgetSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -66,21 +66,26 @@ class BudgetSerializer(serializers.ModelSerializer):
             'category',
             'period',
         ]
-        
+
 
 class SavingsGoalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SavingsGoal
         fields = '__all__'
-        
-        
+        extra_kwargs={
+            'user':{
+                'read_only':True
+                }
+            }
+
+
 class NotificationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Notification
         fields = '__all__'
-        
+
 class ReportSerializer(serializers.ModelSerializer):
 
     class Meta:
