@@ -1,0 +1,591 @@
+/* =========================================
+   BUDGETBUDDY - OCEAN ROYALE REGISTER
+========================================= */
+
+.register-page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  position: relative;
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(14, 165, 233, 0.18),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(37, 99, 235, 0.20),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #03111f 0%,
+      #061827 45%,
+      #071a35 100%
+    );
+
+  color: #f8fcff;
+  font-family: Arial, sans-serif;
+}
+
+
+/* =========================================
+   DECORATIVE GLOW
+========================================= */
+
+.register-page::before {
+  content: "";
+
+  position: absolute;
+
+  width: 350px;
+  height: 350px;
+
+  top: -160px;
+  left: -120px;
+
+  border-radius: 50%;
+
+  background: rgba(34, 211, 238, 0.10);
+
+  filter: blur(70px);
+}
+
+.register-page::after {
+  content: "";
+
+  position: absolute;
+
+  width: 400px;
+  height: 400px;
+
+  right: -180px;
+  bottom: -180px;
+
+  border-radius: 50%;
+
+  background: rgba(37, 99, 235, 0.12);
+
+  filter: blur(80px);
+}
+
+
+/* =========================================
+   LEFT BRAND
+========================================= */
+
+.register-brand {
+  width: 52%;
+  min-height: 100vh;
+
+  box-sizing: border-box;
+
+  padding: 38px 6%;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: space-between;
+
+  position: relative;
+  z-index: 1;
+}
+
+.register-logo {
+  font-size: 27px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+.register-brand-content {
+  max-width: 600px;
+
+  margin: auto 0;
+
+  padding: 45px 0;
+}
+
+
+/* =========================================
+   BADGE
+========================================= */
+
+.register-badge {
+  display: inline-flex;
+
+  padding: 9px 16px;
+
+  border-radius: 30px;
+
+  background: rgba(8, 145, 178, 0.10);
+
+  border: 1px solid rgba(103, 232, 249, 0.22);
+
+  color: #67e8f9;
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  margin-bottom: 25px;
+}
+
+
+/* =========================================
+   HEADING
+========================================= */
+
+.register-brand-content h1 {
+  margin: 0 0 22px;
+
+  font-size: clamp(42px, 5vw, 62px);
+
+  line-height: 1.05;
+
+  letter-spacing: -2px;
+
+  font-weight: 800;
+}
+
+.register-brand-content h1 span {
+  display: block;
+
+  margin-top: 6px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #67e8f9,
+      #38bdf8,
+      #60a5fa
+    );
+
+  -webkit-background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+}
+
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.register-brand-content > p {
+  max-width: 540px;
+
+  margin: 0;
+
+  color: #9fc3d5;
+
+  font-size: 16px;
+
+  line-height: 1.75;
+}
+
+
+/* =========================================
+   FEATURES
+========================================= */
+
+.register-features {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  margin-top: 28px;
+}
+
+.register-features > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  width: fit-content;
+
+  padding: 11px 15px;
+
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.045);
+
+  border: 1px solid rgba(125, 211, 252, 0.10);
+
+  color: #c9e9f7;
+
+  transition: 0.3s ease;
+}
+
+.register-features > div:hover {
+  transform: translateX(4px);
+
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.register-features span {
+  font-size: 22px;
+}
+
+.register-features strong {
+  display: block;
+
+  font-size: 13px;
+
+  margin-bottom: 3px;
+}
+
+.register-features small {
+  color: #7fa7b9;
+
+  font-size: 11px;
+}
+
+
+/* =========================================
+   REGISTER SECTION
+========================================= */
+
+.register-section {
+  width: 48%;
+  min-height: 100vh;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 40px 6%;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* =========================================
+   REGISTER CARD
+========================================= */
+
+.register-card {
+  width: 100%;
+
+  max-width: 450px;
+
+  padding: 42px;
+
+  box-sizing: border-box;
+
+  border-radius: 26px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(12, 40, 65, 0.88),
+      rgba(7, 27, 53, 0.78)
+    );
+
+  border: 1px solid rgba(125, 211, 252, 0.17);
+
+  box-shadow:
+    0 35px 90px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  backdrop-filter: blur(20px);
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.register-header {
+  margin-bottom: 28px;
+}
+
+.register-header h2 {
+  margin: 0 0 9px;
+
+  font-size: 31px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+.register-header p {
+  margin: 0;
+
+  color: #8fb4c6;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================
+   INPUTS
+========================================= */
+
+.register-input-group {
+  margin-bottom: 19px;
+}
+
+.register-input-group label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #c9e9f7;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+.register-input-group input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 14px 15px;
+
+  border-radius: 12px;
+
+  border: 1px solid rgba(125, 211, 252, 0.17);
+
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.055);
+
+  color: #f5fbff;
+
+  font-size: 14px;
+
+  transition: 0.3s ease;
+}
+
+.register-input-group input::placeholder {
+  color: #66899a;
+}
+
+.register-input-group input:hover {
+  border-color: rgba(103, 232, 249, 0.30);
+}
+
+.register-input-group input:focus {
+  border-color: #38bdf8;
+
+  background: rgba(14, 165, 233, 0.07);
+
+  box-shadow:
+    0 0 0 4px rgba(56, 189, 248, 0.09);
+}
+
+
+/* =========================================
+   BUTTON
+========================================= */
+
+.register-submit {
+  width: 100%;
+
+  padding: 15px;
+
+  margin-top: 5px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      100deg,
+      #0891b2,
+      #2563eb
+    );
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 30px rgba(14, 165, 233, 0.22);
+
+  transition: 0.3s ease;
+}
+
+.register-submit:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 16px 38px rgba(14, 165, 233, 0.35);
+}
+
+.register-submit:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================
+   MESSAGES
+========================================= */
+
+.register-success {
+  margin: 17px 0 0;
+
+  text-align: center;
+
+  color: #67e8f9;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+.register-error {
+  margin: 17px 0 0;
+
+  text-align: center;
+
+  color: #fb7185;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+
+/* =========================================
+   LOGIN LINK
+========================================= */
+
+.login-link-text {
+  margin-top: 25px;
+
+  padding-top: 22px;
+
+  border-top: 1px solid rgba(125, 211, 252, 0.08);
+
+  text-align: center;
+
+  color: #8fb4c6;
+
+  font-size: 14px;
+}
+
+.login-link-text a {
+  margin-left: 6px;
+
+  color: #38bdf8;
+
+  text-decoration: none;
+
+  font-weight: 700;
+
+  transition: 0.3s ease;
+}
+
+.login-link-text a:hover {
+  color: #67e8f9;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1000px) {
+
+  .register-page {
+    flex-direction: column;
+  }
+
+  .register-brand {
+    width: 100%;
+
+    min-height: auto;
+
+    padding: 30px 7% 10px;
+  }
+
+  .register-brand-content {
+    margin: 45px auto 20px;
+
+    text-align: center;
+  }
+
+  .register-brand-content > p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .register-features {
+    align-items: center;
+  }
+
+  .register-section {
+    width: 100%;
+
+    min-height: auto;
+
+    padding: 30px 7% 60px;
+  }
+}
+
+
+@media (max-width: 600px) {
+
+  .register-brand {
+    padding: 25px 5% 5px;
+  }
+
+  .register-logo {
+    font-size: 23px;
+  }
+
+  .register-brand-content {
+    margin-top: 35px;
+  }
+
+  .register-brand-content h1 {
+    font-size: 37px;
+
+    letter-spacing: -1px;
+  }
+
+  .register-brand-content > p {
+    font-size: 14px;
+  }
+
+  .register-section {
+    padding: 25px 5% 45px;
+  }
+
+  .register-card {
+    padding: 30px 23px;
+
+    border-radius: 21px;
+  }
+
+  .register-header h2 {
+    font-size: 27px;
+  }
+}

@@ -74,8 +74,11 @@ h2 {
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
+  font-family: Inter, sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.8px;
   margin: 32px 0;
   @media (max-width: 1024px) {
     font-size: 36px;
@@ -108,4 +111,25 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Hide number input spin buttons */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }

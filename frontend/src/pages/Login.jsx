@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./Login.css";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -36,13 +37,11 @@ function Login() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store JWT tokens
         localStorage.setItem("access_token", data.access);
         localStorage.setItem("refresh_token", data.refresh);
 
         setMessage("Login successful!");
 
-        // Go to dashboard
         navigate("/dashboard");
       } else {
         setMessage(data.error || "Invalid email or password");
@@ -54,49 +53,112 @@ function Login() {
   };
 
   return (
-    <div>
-      <h1>BudgetBuddy Login</h1>
+    <div className="login-page">
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email</label>
-          <br />
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+      {/* Left Side */}
+      <div className="login-brand">
+
+        <div className="login-logo">
+          💰 BudgetBuddy
         </div>
 
-        <br />
+        <div className="brand-content">
 
-        <div>
-          <label>Password</label>
-          <br />
-          <input
-            type="password"
-            name="password"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+          <div className="brand-badge">
+             Smart Financial Management
+          </div>
+
+          <h1>
+            Manage your money.
+            <span> Build your future.</span>
+          </h1>
+
+          <p>
+            Intelligent Student Budget Planning and Personal
+            Expense Management Platform.
+          </p>
+
+          <div className="brand-features">
+            <div>💸 Track your expenses</div>
+            <div>💵 Manage your income</div>
+            <div>🎯 Plan your budgets</div>
+          </div>
+
         </div>
 
-        <br />
+      </div>
 
-        <button type="submit">Login</button>
-      </form>
+      {/* Login Section */}
+      <div className="login-section">
 
-      {message && <p>{message}</p>}
+        <div className="login-card">
 
-      <p>
-        Don't have an account?{" "}
-        <Link to="/register">Register</Link>
-      </p>
+          <div className="login-header">
+            <h2>Welcome Back 👋</h2>
+            <p>Sign in to continue to BudgetBuddy</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+
+            <div className="input-group">
+              <label>Email</label>
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Password</label>
+
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="login-submit"
+            >
+              Sign In →
+            </button>
+
+          </form>
+
+          {message && (
+            <p
+              className={
+                message === "Login successful!"
+                  ? "success-message"
+                  : "error-message"
+              }
+            >
+              {message}
+            </p>
+          )}
+
+          <div className="register-text">
+            Don't have an account?
+
+            <Link to="/register">
+              Create an account
+            </Link>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

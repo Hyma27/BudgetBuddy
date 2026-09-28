@@ -1,0 +1,321 @@
+/* =========================================================
+   BUDGETBUDDY SIDEBAR
+   ========================================================= */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  width: 245px;
+  height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 26px 16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 19, 39, 0.96),
+      rgba(4, 12, 26, 0.98)
+    );
+
+  border-right: 1px solid rgba(148, 163, 184, 0.10);
+
+  box-shadow:
+    15px 0 50px rgba(0, 0, 0, 0.30);
+
+  backdrop-filter: blur(25px);
+
+  z-index: 1000;
+
+  overflow-y: auto;
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 7px 8px;
+
+  margin-bottom: 42px;
+
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  width: 43px;
+  height: 43px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #2563eb,
+      #0891b2
+    );
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: 800;
+
+  box-shadow:
+    0 0 28px rgba(37, 99, 235, 0.28);
+}
+
+.brand h2 {
+  margin: 0;
+
+  color: #f8fbff;
+
+  font-size: 19px;
+  font-weight: 800;
+
+  letter-spacing: -0.4px;
+}
+
+.brand span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #71839d;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  width: 100%;
+}
+
+.nav-item {
+  position: relative;
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 13px 14px;
+
+  border-radius: 12px;
+
+  color: #8192aa;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  text-decoration: none;
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+
+  overflow: hidden;
+
+  flex-shrink: 0;
+}
+
+.nav-item span {
+  width: 22px;
+  height: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 7px;
+
+  color: #8da1ba;
+
+  font-size: 16px;
+
+  background: rgba(148, 163, 184, 0.06);
+
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.nav-item:hover {
+  color: #dcecff;
+
+  background: rgba(37, 99, 235, 0.08);
+
+  transform: translateX(3px);
+}
+
+.nav-item:hover span {
+  color: #67e8f9;
+
+  background: rgba(34, 211, 238, 0.08);
+
+  transform: scale(1.08);
+}
+
+.nav-item.active {
+  color: white;
+
+  background:
+    linear-gradient(
+      100deg,
+      rgba(37, 99, 235, 0.90),
+      rgba(8, 145, 178, 0.85)
+    );
+
+  box-shadow:
+    0 8px 28px rgba(37, 99, 235, 0.20);
+}
+
+.nav-item.active span {
+  color: white;
+
+  background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* =========================================================
+   SIDEBAR BOTTOM
+   ========================================================= */
+
+.sidebar-bottom {
+  margin-top: auto;
+
+  padding-top: 20px;
+
+  flex-shrink: 0;
+}
+
+.sidebar-tip {
+  display: flex;
+
+  gap: 10px;
+
+  padding: 13px;
+
+  margin-bottom: 15px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.sidebar-tip > span {
+  font-size: 17px;
+}
+
+.sidebar-tip strong {
+  color: #cbd9ea;
+
+  font-size: 11px;
+}
+
+.sidebar-tip p {
+  margin: 4px 0 0;
+
+  color: #667992;
+
+  font-size: 9px;
+
+  line-height: 1.4;
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.logout-btn {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  padding: 10px 15px;
+
+  border: 1px solid rgba(148, 163, 184, 0.12);
+
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #a8b7c9;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.logout-btn:hover {
+  color: #fda4af;
+
+  background: rgba(244, 63, 94, 0.07);
+
+  border-color: rgba(244, 63, 94, 0.18);
+
+  transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 850px) {
+  .sidebar {
+    width: 210px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sidebar {
+    display: none;
+  }
+}

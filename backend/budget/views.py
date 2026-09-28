@@ -1,3 +1,5 @@
+from urllib import request
+
 from openai import models
 from django.db import models
 from django.db.models import Sum
@@ -214,11 +216,12 @@ class ExpenseView(APIView):
         if serializer.is_valid():
             expense = serializer.save(user=request.user)
 
-            # Check matching monthly budget
+            # Check matching monthly or month-specific budget
+            expense_month_name = expense.expense_date.strftime("%B")
             budget = Budget.objects.filter(
                 user=request.user,
                 category=expense.category,
-                period="Monthly"
+                period__in=["Monthly", expense_month_name]
             ).first()
 
             if budget:
@@ -484,26 +487,25 @@ class SavingsGoalView(APIView):
                 >= savings_goal.target_amount
             ):
 
-                # Prevent duplicate unread milestone notifications
+               # Prevent duplicate milestone notifications
                 existing_notification = Notification.objects.filter(
-                    user=request.user,
-                    notification_type="Savings Goal Milestone",
-                    message__contains=savings_goal.goal_name,
-                    is_read=False
+                   user=request.user,
+                   notification_type="Savings Goal Milestone",
+                   message__contains=f"Goal ID: {savings_goal.id}"
                 ).exists()
 
                 if not existing_notification:
-
-                    Notification.objects.create(
-                        user=request.user,
-                        notification_type="Savings Goal Milestone",
-                        message=(
+                   Notification.objects.create(
+                       user=request.user,
+                       notification_type="Savings Goal Milestone",
+                       message=(
                             f"Congratulations! You have reached your "
                             f"savings goal '{savings_goal.goal_name}' "
-                            f"of ₹{savings_goal.target_amount}."
+                            f"of ₹{savings_goal.target_amount}. "
+                            f"Goal ID: {savings_goal.id}"
                         )
-                    )
-
+                    ) 
+ 
             return Response(
                 SavingsGoalSerializer(savings_goal).data,
                 status=status.HTTP_200_OK

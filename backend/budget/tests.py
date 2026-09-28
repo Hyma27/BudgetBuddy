@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 from datetime import date
 
-from .models import Income, Expense, Budget, Notification
+from .models import Income, Expense, Budget, Notification,SavingsGoal
 
 
 User = get_user_model()
@@ -647,5 +647,119 @@ class BudgetAlertAPITestCase(TestCase):
             len(data),
             0
         )
+
+    def test_september_budget_alert_trigger(self):
+        # Create a September Travel budget of ₹2000
+        Budget.objects.create(
+            user=self.user,
+            amount=2000,
+            category="Travel",
+            period="September"
+        )
+
+        # Post a September Travel expense reaching 100% (₹2000)
+        response = self.client.post(
+            "/api/expense/",
+            {
+                "title": "Bus Pass",
+                "amount": 2000,
+                "category": "Travel",
+                "expense_date": "2026-09-15",
+                "description": "Monthly pass"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+
+        notification = Notification.objects.filter(
+            user=self.user,
+            notification_type="Budget Limit Alert",
+            message__contains="Travel"
+        ).first()
+        self.assertIsNotNone(notification)
+
+    def test_different_category_does_not_trigger_wrong_budget(self):
+        # Create a September Shopping budget of ₹10000
+        Budget.objects.create(
+            user=self.user,
+            amount=10000,
+            category="Shopping",
+            period="September"
+        )
+
+        # Post an Education expense of ₹9000 (different category)
+        response = self.client.post(
+            "/api/expense/",
+            {
+                "title": "Books",
+                "amount": 9000,
+                "category": "Education",
+                "expense_date": "2026-09-15",
+                "description": "College textbooks"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+
+        # Education should NOT have an alert
+        education_notification = Notification.objects.filter(
+            user=self.user,
+            message__contains="Education"
+        ).first()
+        self.assertIsNone(education_notification)
     
-    
+class SavingsGoalAPITestCase(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="savingsgoaltest",
+            email="savingsgoaltest@example.com",
+            password="Test@12345"
+        )
+
+        self.client = APIClient()
+
+        refresh = RefreshToken.for_user(self.user)
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+
+    def test_savings_goal_milestone_duplicate_prevention(self):
+        goal = SavingsGoal.objects.create(
+            user=self.user,
+            goal_name="Duplicate Test Goal",
+            target_amount=1000,
+            current_amount=0
+        )
+
+        # First update reaches the target
+        response1 = self.client.put(
+            f"/api/savings-goal/{goal.id}/",
+            {
+                "current_amount": 1000
+            },
+            format="json"
+        )
+
+        self.assertEqual(response1.status_code, 200)
+
+        # Second update keeps the goal at the target
+        response2 = self.client.put(
+            f"/api/savings-goal/{goal.id}/",
+            {
+                "current_amount": 1000
+            },
+            format="json"
+        )
+
+        self.assertEqual(response2.status_code, 200)
+
+        notifications = Notification.objects.filter(
+            user=self.user,
+            notification_type="Savings Goal Milestone",
+            message__contains=f"Goal ID: {goal.id}"
+        )
+
+        # Only one milestone notification should exist
+        self.assertEqual(notifications.count(), 1)

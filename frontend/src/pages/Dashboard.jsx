@@ -1,1006 +1,603 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, NavLink } from "react-router-dom";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import "./Dashboard.css";
+import Sidebar from "../components/Sidebar";
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  const [message, setMessage] = useState("Checking authentication...");
-
-  // Expense states
-  const [expenseMessage, setExpenseMessage] = useState("");
   const [expenses, setExpenses] = useState([]);
-  const [editingExpenseId, setEditingExpenseId] = useState(null);
-
-  const [expense, setExpense] = useState({
-    title: "",
-    amount: "",
-    category: "Food",
-    expense_date: "",
-    description: "",
-  });
-
-  // Income states
-  const [incomeMessage, setIncomeMessage] = useState("");
   const [incomes, setIncomes] = useState([]);
-  const [editingIncomeId, setEditingIncomeId] = useState(null);
+  const [budgets, setBudgets] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [savingsGoals, setSavingsGoals] = useState([]);
+  const [username, setUsername] = useState("");
+  const [message, setMessage] = useState("Loading your financial overview...");
 
-
-  const [income, setIncome] = useState({
-    source: "Pocket Money",
-    amount: "",
-    income_date: "",
-    description: "",
-  });
-
-  // Budget states
-const [budgets, setBudgets] = useState([]);
-const [budgetMessage, setBudgetMessage] = useState("");
-
-const [budget, setBudget] = useState({
-  amount: "",
-  category: "Food",
-  period: "Monthly",
-});
-
-  // Fetch user's expenses
-  const fetchExpenses = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/expense/",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setExpenses(data);
-      } else {
-        console.error(data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // Fetch user's incomes
-  const fetchIncomes = async () => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/income/",
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setIncomes(data);
-      } else {
-        console.error(data);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // Fetch user's budgets
-const fetchBudgets = async () => {
   const token = localStorage.getItem("access_token");
 
-  if (!token) {
-    navigate("/login");
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      "http://127.0.0.1:8000/api/budget/",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setBudgets(data);
-    } else {
-      console.error("Budget error:", data);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-  // Check authentication when Dashboard opens
   useEffect(() => {
-    const checkAuthentication = async () => {
-      const token = localStorage.getItem("access_token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
 
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
+    const loadDashboard = async () => {
       try {
-        const response = await fetch(
+        const protectedResponse = await fetch(
           "http://127.0.0.1:8000/api/protected/",
           {
-            method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
 
-        const data = await response.json();
-
-        if (response.ok) {
-          setMessage(
-            data.message || "You are successfully authenticated."
-          );
-
-          fetchExpenses();
-          fetchIncomes();
-          fetchBudgets();
-
-        } else {
+        if (!protectedResponse.ok) {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
           navigate("/login");
+          return;
         }
+
+        const [
+          expenseResponse,
+          incomeResponse,
+          budgetResponse,
+          analyticsResponse,
+          savingsResponse,
+          profileResponse,
+        ] = await Promise.all([
+          fetch("http://127.0.0.1:8000/api/expense/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://127.0.0.1:8000/api/income/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://127.0.0.1:8000/api/budget/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://127.0.0.1:8000/api/analytics/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://127.0.0.1:8000/api/savings-goal/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://127.0.0.1:8000/api/profile/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (
+          !expenseResponse.ok ||
+          !incomeResponse.ok ||
+          !budgetResponse.ok
+        ) {
+          throw new Error("Unable to load financial data");
+        }
+
+        const expenseData = await expenseResponse.json();
+        const incomeData = await incomeResponse.json();
+        const budgetData = await budgetResponse.json();
+
+        setExpenses(Array.isArray(expenseData) ? expenseData : []);
+        setIncomes(Array.isArray(incomeData) ? incomeData : []);
+        setBudgets(Array.isArray(budgetData) ? budgetData : []);
+
+        if (analyticsResponse.ok) {
+          const analyticsData = await analyticsResponse.json();
+          setAnalytics(analyticsData);
+        }
+
+        if (savingsResponse.ok) {
+          const savingsData = await savingsResponse.json();
+          setSavingsGoals(Array.isArray(savingsData) ? savingsData : []);
+        }
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          if (profileData.username) {
+            setUsername(profileData.username);
+          }
+        }
+
+        setMessage("Your financial overview is ready.");
       } catch (error) {
         console.error(error);
-        setMessage("Unable to connect to the backend.");
+        setMessage("Unable to load dashboard data.");
       }
     };
 
-    checkAuthentication();
-  }, [navigate]);
+    loadDashboard();
+  }, [navigate, token]);
 
-  // Handle expense input changes
-  const handleChange = (e) => {
-    setExpense({
-      ...expense,
-      [e.target.name]: e.target.value,
+  const totalIncome = useMemo(() => {
+    if (analytics?.summary?.total_income !== undefined) {
+      return Number(analytics.summary.total_income);
+    }
+    return incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [incomes, analytics]);
+
+  const totalExpenses = useMemo(() => {
+    if (analytics?.summary?.total_expenses !== undefined) {
+      return Number(analytics.summary.total_expenses);
+    }
+    return expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  }, [expenses, analytics]);
+
+  const remainingAmount = useMemo(() => {
+    if (analytics?.summary?.savings !== undefined) {
+      return Number(analytics.summary.savings);
+    }
+    return totalIncome - totalExpenses;
+  }, [totalIncome, totalExpenses, analytics]);
+
+  const expenseChartData = useMemo(() => {
+    if (analytics?.category_wise_expenses && analytics.category_wise_expenses.length > 0) {
+      return analytics.category_wise_expenses.map((item) => ({
+        name: item.category,
+        value: Number(item.total || 0),
+      }));
+    }
+
+    const categoryTotals = {};
+    expenses.forEach((expense) => {
+      const category = expense.category || "Miscellaneous";
+      categoryTotals[category] =
+        (categoryTotals[category] || 0) + Number(expense.amount || 0);
     });
-  };
 
-  // Handle income input changes
-  const handleIncomeChange = (e) => {
-    setIncome({
-      ...income,
-      [e.target.name]: e.target.value,
-    });
-  };
+    return Object.entries(categoryTotals).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [expenses, analytics]);
 
-  // Handle budget input changes
-const handleBudgetChange = (e) => {
-  setBudget({
-    ...budget,
-    [e.target.name]: e.target.value,
-  });
-};
+  const monthlyTrendChartData = useMemo(() => {
+    if (!analytics?.monthly_trends) return [];
 
-// Add budget
-const handleBudgetSubmit = async (e) => {
-  e.preventDefault();
+    const incomeTrends = analytics.monthly_trends.income || [];
+    const expenseTrends = analytics.monthly_trends.expenses || [];
 
-  setBudgetMessage("");
+    const monthsSet = new Set([
+      ...incomeTrends.map((i) => i.month),
+      ...expenseTrends.map((e) => e.month),
+    ]);
 
-  const token = localStorage.getItem("access_token");
+    const sortedMonths = Array.from(monthsSet).sort();
 
-  if (!token) {
-    navigate("/login");
-    return;
-  }
+    return sortedMonths.map((monthStr) => {
+      const inc = incomeTrends.find((i) => i.month === monthStr);
+      const exp = expenseTrends.find((e) => e.month === monthStr);
 
-  try {
-    const response = await fetch(
-      "http://127.0.0.1:8000/api/budget/",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          amount: budget.amount,
-          category: budget.category,
-          period: budget.period,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setBudgetMessage("Budget created successfully!");
-
-      setBudget({
-        amount: "",
-        category: "Food",
-        period: "Monthly",
+      const [year, monthNum] = monthStr.split("-");
+      const dateObj = new Date(Number(year), Number(monthNum) - 1, 1);
+      const monthLabel = dateObj.toLocaleDateString("en-IN", {
+        month: "short",
+        year: "2-digit",
       });
 
-      fetchBudgets();
-    } else {
-      console.error("Budget error:", data);
-
-      setBudgetMessage("Failed to create budget.");
-    }
-  } catch (error) {
-    console.error(error);
-
-    setBudgetMessage("Unable to connect to the backend.");
-  }
-};
-
-  // Add income
-  const handleIncomeSubmit = async (e) => {
-    e.preventDefault();
-
-
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-    try {
-        const url =
-          editingIncomeId !== null
-            ? `http://127.0.0.1:8000/api/income/${editingIncomeId}/`
-            : "http://127.0.0.1:8000/api/income/";
-
-        const method = editingIncomeId !== null ? "PUT" : "POST";
-        
-        const response = await fetch(url, {
-          method: method,
-          headers: {
-             "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-           },
-           body: JSON.stringify({
-             source: income.source,
-             amount: income.amount,
-             income_date: income.income_date,
-            description: income.description,
-           }),
-     });
-    
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setIncomeMessage(
-        editingIncomeId !== null
-          ? "Income updated successfully!"
-          : "Income added successfully!"
-      );
-
-        setIncome({
-          source: "Pocket Money",
-          amount: "",
-          income_date: "",
-          description: "",
-        });
-
-        setEditingIncomeId(null);
-
-        // Refresh income history
-        fetchIncomes();
-      } else {
-        console.error("Income error:", data);
-
-        setIncomeMessage(
-         typeof data === "object"
-           ? JSON.stringify(data)
-           : "Failed to save income."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
-      setIncomeMessage(
-        "Unable to connect to the backend."
-      );
-    }
-  };
-
-
-
-  // Add or update expense
-  const handleExpenseSubmit = async (e) => {
-    e.preventDefault();
-
-    setExpenseMessage("");
-
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      let url = "http://127.0.0.1:8000/api/expense/";
-      let method = "POST";
-
-      if (editingExpenseId !== null) {
-        url = `http://127.0.0.1:8000/api/expense/${editingExpenseId}/`;
-        method = "PUT";
-      }
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(expense),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (editingExpenseId !== null) {
-          setExpenseMessage("Expense updated successfully!");
-        } else {
-          setExpenseMessage("Expense added successfully!");
-        }
-
-        setExpense({
-          title: "",
-          amount: "",
-          category: "Food",
-          expense_date: "",
-          description: "",
-        });
-
-        setEditingExpenseId(null);
-
-        fetchExpenses();
-      } else {
-        console.error(data);
-
-        setExpenseMessage(
-          data.detail ||
-            data.error ||
-            "Failed to save expense."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
-      setExpenseMessage(
-        "Unable to connect to the backend."
-      );
-    }
-  };
-
-  // Edit expense
-  const handleEdit = (item) => {
-  setEditingExpenseId(item.id);
-
-  setExpense({
-    title: item.title,
-    amount: item.amount,
-    category: item.category,
-    expense_date: item.expense_date,
-    description: item.description || "",
-  });
-
-  setExpenseMessage("");
-};
-  // Edit income
-  const handleIncomeEdit = (item) => {
-    setEditingIncomeId(item.id);
-
-    setIncome({
-      source: item.source,
-      amount: item.amount,
-      income_date: item.income_date,
-      description: item.description || "",
+      return {
+        month: monthLabel,
+        Income: Number(inc?.total || 0),
+        Expenses: Number(exp?.total || 0),
+      };
     });
+  }, [analytics]);
 
-    setIncomeMessage("");
+  const recentTransactions = useMemo(() => {
+    const transactions = [
+      ...incomes.map((item) => ({
+        id: `income-${item.id}`,
+        title: item.source,
+        amount: Number(item.amount || 0),
+        date: item.income_date,
+        type: "Income",
+      })),
+      ...expenses.map((item) => ({
+        id: `expense-${item.id}`,
+        title: item.title,
+        amount: Number(item.amount || 0),
+        date: item.expense_date,
+        type: "Expense",
+      })),
+    ];
+
+    return transactions
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 6);
+  }, [incomes, expenses]);
+
+  const formatAmount = (amount) => {
+    return `₹${Number(amount || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
-  const handleIncomeDelete = async (incomeId) => {
-  const token = localStorage.getItem("access_token");
+  const formatDate = (date) => {
+    if (!date) return "-";
 
-  if (!token) {
-    navigate("/login");
-    return;
-  }
-
-  const confirmDelete = window.confirm(
-    "Are you sure you want to delete this income?"
-  );
-
-  if (!confirmDelete) {
-    return;
-  }
-
-  try {
-    const response = await fetch(
-      `http://127.0.0.1:8000/api/income/${incomeId}/`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setIncomeMessage("Income deleted successfully!");
-      fetchIncomes();
-    } else {
-      console.error("Income delete error:", data);
-      setIncomeMessage(
-        data.error || "Failed to delete income."
-      );
-    }
-  } catch (error) {
-    console.error(error);
-    setIncomeMessage("Unable to connect to the backend.");
-  }
-};
-
-  // Delete expense
-  const handleDelete = async (expenseId) => {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this expense?"
-    );
-
-    if (!confirmDelete) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/expense/${expenseId}/`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setExpenseMessage("Expense deleted successfully!");
-
-        fetchExpenses();
-      } else {
-        console.error(data);
-
-        setExpenseMessage(
-          data.error || "Failed to delete expense."
-        );
-      }
-    } catch (error) {
-      console.error(error);
-
-      setExpenseMessage(
-        "Unable to connect to the backend."
-      );
-    }
-  };
-
-  // Cancel expense editing
-  const handleCancelEdit = () => {
-    setEditingExpenseId(null);
-
-    setExpense({
-      title: "",
-      amount: "",
-      category: "Food",
-      expense_date: "",
-      description: "",
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
-
-    setExpenseMessage("");
   };
-const totalIncome = incomes.reduce(
-  (sum, item) => sum + Number(item.amount),
-  0
-);
-
-const totalExpenses = expenses.reduce(
-  (sum, item) => sum + Number(item.amount),
-  0
-);
-const remainingAmount = totalIncome - totalExpenses;
-const recentTransactions = [
-  ...incomes.map((item) => ({
-    ...item,
-    type: "Income",
-    date: item.income_date,
-  })),
-
-  ...expenses.map((item) => ({
-    ...item,
-    type: "Expense",
-    date: item.expense_date,
-  })),
-].sort((a, b) => {
-  return new Date(b.date) - new Date(a.date);
-});
 
   return (
+    <div className="dashboard">
 
-    <div>
+      {/* SIDEBAR */}
+      <Sidebar />
 
+      {/* MAIN CONTENT */}
+      <main className="dashboard-main">
+        {/* TOP BAR */}
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">FINANCIAL OVERVIEW & ANALYTICS</p>
+            <h1>Welcome, {username || "User"} 👋</h1>
+            <p className="topbar-subtitle">
+              Intelligent financial insights, spending analytics, and progress tracking.
+            </p>
+          </div>
 
-    <button onClick={() => {
-  localStorage.removeItem("access_token");
-  navigate("/login");
-}}>
-  Logout
-</button>
-      <h1>Welcome to BudgetBuddy Dashboard</h1>
+          <div className="status-pill">
+            <span className="status-dot"></span>
+            {message}
+          </div>
+        </header>
 
-      <p>{message}</p>
+        {/* SUMMARY CARDS */}
+        <section className="summary-grid">
+          <div className="summary-card income-card">
+            <div className="summary-card-top">
+              <span className="summary-icon">↙</span>
+              <span className="summary-label">TOTAL INCOME</span>
+            </div>
 
-      {/* Financial Summary */}
-      <div>
-        <h2>Financial Summary</h2>
+            <h2>{formatAmount(totalIncome)}</h2>
+            <p>Money received</p>
+          </div>
 
-        <p>
-          <strong>Total Income:</strong> ₹{totalIncome.toFixed(2)}
-        </p>
+          <div className="summary-card expense-card">
+            <div className="summary-card-top">
+              <span className="summary-icon">↗</span>
+              <span className="summary-label">TOTAL EXPENSES</span>
+            </div>
 
-        <p>
-           <strong>Total Expenses:</strong> ₹{totalExpenses.toFixed(2)}
-        </p>
+            <h2>{formatAmount(totalExpenses)}</h2>
+            <p>Money spent</p>
+          </div>
 
-        <p>
-           <strong>Remaining Amount:</strong> ₹{remainingAmount.toFixed(2)}
-        </p>
-     </div>
-
-    <hr />
-
-{/* Budget Creation */}
-<h2>Create Monthly Budget</h2>
-
-<form onSubmit={handleBudgetSubmit}>
-  <div>
-    <label>Amount</label>
-    <br />
-
-    <input
-      type="number"
-      name="amount"
-      value={budget.amount}
-      onChange={handleBudgetChange}
-      placeholder="Enter budget amount"
-      min="0.01"
-      step="0.01"
-      required
-    />
-  </div>
-
-  <br />
-
-  <div>
-    <label>Category</label>
-    <br />
-
-    <select
-      name="category"
-      value={budget.category}
-      onChange={handleBudgetChange}
-      required
-    >
-      <option value="Food">Food</option>
-      <option value="Travel">Travel</option>
-      <option value="Shopping">Shopping</option>
-      <option value="Education">Education</option>
-      <option value="Entertainment">Entertainment</option>
-      <option value="Miscellaneous">Miscellaneous</option>
-    </select>
-  </div>
-
-  <br />
-
-  <div>
-    <label>Period</label>
-    <br />
-
-    <select
-      name="period"
-      value={budget.period}
-      onChange={handleBudgetChange}
-    >
-      <option value="Monthly">Monthly</option>
-    </select>
-  </div>
-
-  <br />
-
-  <button type="submit">
-    Create Budget
-  </button>
-
-  <p>{budgetMessage}</p>
-</form>
-
-<hr />
-
-{/* Budget History */}
-<h2>My Budgets</h2>
-
-{budgets.length === 0 ? (
-  <p>No budgets created yet.</p>
-) : (
-  <ul>
-    {budgets.map((item) => (
-      <li key={item.id}>
-        <strong>₹{Number(item.amount).toFixed(2)}</strong>
-        {" - "}
-        {item.category}
-        {" - "}
-        {item.period}
-      </li>
-    ))}
-  </ul>
-)}
-
-<hr />  
-
-    {/* Add / Update Expense */}
-    <h2>
-      {editingExpenseId !== null
-        ? "Update Expense"
-        : "Add Expense"}
-    </h2>
-
-    <form onSubmit={handleExpenseSubmit}>
-        <div>
-
-          <label>Title</label>
-          <br />
-
-          <input
-            type="text"
-            name="title"
-            value={expense.title}
-            onChange={handleChange}
-            placeholder="Enter expense title"
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Amount</label>
-          <br />
-
-          <input
-            type="number"
-            name="amount"
-            value={expense.amount}
-            onChange={handleChange}
-            placeholder="Enter amount"
-            min="0.01"
-            step="0.01"
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Category</label>
-          <br />
-
-          <select
-            name="category"
-            value={expense.category}
-            onChange={handleChange}
+          <div
+            className={`summary-card ${
+              remainingAmount >= 0 ? "balance-card" : "negative-card"
+            }`}
           >
-            <option value="Food">Food</option>
-            <option value="Travel">Travel</option>
-            <option value="Shopping">Shopping</option>
-            <option value="Education">Education</option>
-            <option value="Entertainment">
-              Entertainment
-            </option>
-            <option value="Miscellaneous">
-              Miscellaneous
-            </option>
-          </select>
-        </div>
+            <div className="summary-card-top">
+              <span className="summary-icon">₹</span>
+              <span className="summary-label">NET SAVINGS</span>
+            </div>
 
-        <br />
+            <h2>{formatAmount(remainingAmount)}</h2>
+            <p>Income − Expenses</p>
+          </div>
 
-        <div>
-          <label>Date</label>
-          <br />
+          <div className="summary-card budget-card">
+            <div className="summary-card-top">
+              <span className="summary-icon">◫</span>
+              <span className="summary-label">ACTIVE BUDGETS</span>
+            </div>
 
-          <input
-            type="date"
-            name="expense_date"
-            value={expense.expense_date}
-            onChange={handleChange}
-            required
-          />
-        </div>
+            <h2>{budgets.length}</h2>
+            <p>Budget plans created</p>
+          </div>
+        </section>
 
-        <br />
+        {/* ANALYTICS CHARTS GRID */}
+        <section className="dashboard-content-grid">
+          {/* PIE CHART - CATEGORY SPENDING */}
+          <div className="section chart-section">
+            <div className="section-header">
+              <div>
+                <p className="section-kicker">SPENDING ANALYSIS</p>
+                <h2>Category Spending</h2>
+              </div>
 
-        <div>
-          <label>Description</label>
-          <br />
+              <span className="section-badge">
+                {expenseChartData.length} categories
+              </span>
+            </div>
 
-          <textarea
-            name="description"
-            value={expense.description}
-            onChange={handleChange}
-            placeholder="Enter description"
-          />
-        </div>
+            <div className="chart-wrapper">
+              {expenseChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={320}>
+                  <PieChart>
+                    <Pie
+                      data={expenseChartData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={105}
+                      innerRadius={58}
+                      paddingAngle={3}
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {expenseChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            [
+                              "#22d3ee",
+                              "#3b82f6",
+                              "#8b5cf6",
+                              "#14b8a6",
+                              "#f59e0b",
+                              "#ec4899",
+                            ][index % 6]
+                          }
+                        />
+                      ))}
+                    </Pie>
 
-        <br />
+                    <Tooltip
+                      formatter={(value) => [
+                        formatAmount(Number(value)),
+                        "Amount",
+                      ]}
+                      contentStyle={{
+                        background: "#071a35",
+                        border: "1px solid rgba(34, 211, 238, 0.35)",
+                        borderRadius: "12px",
+                        color: "#ffffff",
+                      }}
+                    />
 
-        <button type="submit">
-          {editingExpenseId !== null
-            ? "Update Expense"
-            : "Add Expense"}
-        </button>
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-chart">
+                  <div className="empty-chart-icon">📊</div>
+                  <h3>No expense data yet</h3>
+                  <p>
+                    Add your first expense to see your spending breakdown.
+                  </p>
 
-        {editingExpenseId !== null && (
-          <>
-            {" "}
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-            >
-              Cancel
-            </button>
-          </>
-        )}
-      </form>
-
-      {expenseMessage && (
-        <p>{expenseMessage}</p>
-      )}
-
-      <hr />
-
-      {/* Expense History */}
-      <h2>Expense History</h2>
-
-      {expenses.length === 0 ? (
-        <p>No expenses found.</p>
-      ) : (
-        <ul>
-          {expenses.map((item) => (
-            <li key={item.id}>
-              <strong>{item.title}</strong>
-              {" — ₹"}
-              {item.amount}
-              <br />
-
-              Category: {item.category}
-              <br />
-
-              Date: {item.expense_date}
-
-              {item.description && (
-                <>
-                  <br />
-                  Description: {item.description}
-                </>
+                  <button
+                    className="primary-btn"
+                    onClick={() => navigate("/expenses")}
+                  >
+                    Add Expense
+                  </button>
+                </div>
               )}
+            </div>
+          </div>
 
-              <br />
-              <br />
+          {/* MONTHLY TRENDS CHART */}
+          <div className="section chart-section">
+            <div className="section-header">
+              <div>
+                <p className="section-kicker">MONTHLY ANALYTICS</p>
+                <h2>Monthly Trends</h2>
+              </div>
+
+              <span className="section-badge">Income vs. Expenses</span>
+            </div>
+
+            <div className="chart-wrapper">
+              {monthlyTrendChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={monthlyTrendChartData} margin={{ top: 15, right: 15, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
+                    <XAxis dataKey="month" stroke="#71849a" tick={{ fontSize: 11 }} />
+                    <YAxis stroke="#71849a" tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val}`} />
+                    <Tooltip
+                      formatter={(value) => [formatAmount(Number(value)), ""]}
+                      contentStyle={{
+                        background: "#071a35",
+                        border: "1px solid rgba(56, 189, 248, 0.35)",
+                        borderRadius: "12px",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="Income" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="Expenses" fill="#fb7185" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-chart">
+                  <div className="empty-chart-icon">📈</div>
+                  <h3>No monthly trend data</h3>
+                  <p>Record income and expenses across months to see your trend.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* SAVINGS PROGRESS & RECENT ACTIVITY GRID */}
+        <section className="dashboard-content-grid">
+          {/* SAVINGS PROGRESS SECTION */}
+          <div className="section savings-section">
+            <div className="section-header">
+              <div>
+                <p className="section-kicker">GOAL TRACKER</p>
+                <h2>Savings Progress</h2>
+              </div>
+
+              <span className="section-badge">
+                {savingsGoals.length} goals
+              </span>
+            </div>
+
+            <div className="savings-list">
+              {savingsGoals.length > 0 ? (
+                savingsGoals.map((goal) => {
+                  const target = Number(goal.target_amount || 1);
+                  const current = Number(goal.current_amount || 0);
+                  const percent = Math.min(100, Math.round((current / target) * 100));
+
+                  return (
+                    <div className="savings-goal-card" key={goal.id}>
+                      <div className="goal-top">
+                        <div className="goal-title-wrap">
+                          <span className="goal-icon">🎯</span>
+                          <div>
+                            <strong>{goal.goal_name}</strong>
+                            <small>Target Date: {formatDate(goal.target_date)}</small>
+                          </div>
+                        </div>
+
+                        <span className={`goal-pill ${percent >= 100 ? "completed" : "in-progress"}`}>
+                          {percent >= 100 ? "✓ Reached" : `${percent}%`}
+                        </span>
+                      </div>
+
+                      <div className="goal-progress-bar">
+                        <div
+                          className="goal-progress-fill"
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
+
+                      <div className="goal-amounts">
+                        <span>Current: <strong>{formatAmount(current)}</strong></span>
+                        <span>Target: <strong>{formatAmount(target)}</strong></span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="empty-savings">
+                  <div className="empty-savings-icon">💎</div>
+                  <h3>Net Savings: {formatAmount(remainingAmount)}</h3>
+                  <p>
+                    Set up your savings goals in the platform to track milestone targets.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RECENT ACTIVITY */}
+          <div className="section recent-section">
+            <div className="section-header">
+              <div>
+                <p className="section-kicker">LATEST TRANSACTIONS</p>
+                <h2>Recent Activity</h2>
+              </div>
 
               <button
-                type="button"
-                onClick={() => handleEdit(item)}
+                className="text-btn"
+                onClick={() => navigate("/expenses")}
               >
-                Edit
+                View All →
               </button>
+            </div>
 
-              {" "}
+            <div className="activity-list">
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((transaction) => (
+                  <div className="activity-item" key={transaction.id}>
+                    <div
+                      className={`activity-icon ${
+                        transaction.type === "Income"
+                          ? "activity-income"
+                          : "activity-expense"
+                      }`}
+                    >
+                      {transaction.type === "Income" ? "↙" : "↗"}
+                    </div>
 
-              <button
-                type="button"
-                onClick={() => handleDelete(item.id)}
-              >
-                Delete
-              </button>
+                    <div className="activity-info">
+                      <strong>{transaction.title}</strong>
+                      <span>{formatDate(transaction.date)}</span>
+                    </div>
 
-              <br />
-              <br />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <hr />
-
-      {/* Add Income */}
-      <h2>Add Income</h2>
-
-      <form onSubmit={handleIncomeSubmit}>
-        <div>
-          <label>Source</label>
-          <br />
-
-          <select
-            name="source"
-            value={income.source}
-            onChange={handleIncomeChange}
-          >
-            <option value="Pocket Money">
-              Pocket Money
-            </option>
-
-            <option value="Scholarship">
-              Scholarship
-            </option>
-
-            <option value="Freelance Income">
-              Freelance Income
-            </option>
-          </select>
-        </div>
-
-        <br />
-
-        <div>
-          <label>Amount</label>
-          <br />
-
-          <input
-            type="number"
-            name="amount"
-            value={income.amount}
-            onChange={handleIncomeChange}
-            placeholder="Enter income amount"
-            min="0.01"
-            step="0.01"
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Date</label>
-          <br />
-
-          <input
-            type="date"
-            name="income_date"
-            value={income.income_date}
-            onChange={handleIncomeChange}
-            required
-          />
-        </div>
-
-        <br />
-
-        <div>
-          <label>Description</label>
-          <br />
-
-          <textarea
-            name="description"
-            value={income.description}
-            onChange={handleIncomeChange}
-            placeholder="Enter income details"
-          />
-        </div>
-
-        <br />
-
-        <button type="submit">
-          {editingIncomeId !== null
-             ? "Update Income"
-             : "Add Income"}
-        </button>
-      </form>
-
-      {incomeMessage && (
-        <p>{incomeMessage}</p>
-      )}
-
-      <hr />
-
-      {/* Income History */}
-      <h2>Income History</h2>
-
-      {incomes.length === 0 ? (
-        <p>No income records found.</p>
-      ) : (
-        <ul>
-          {incomes.map((item) => (
-            <li key={item.id}>
-              <strong>{item.source}</strong>
-              {" — ₹"}
-              {item.amount}
-              <br />
-
-              Date: {item.income_date}
-
-              {item.description && (
-                <>
-                  <br />
-                  Description: {item.description}
-                </>
+                    <div
+                      className={`activity-amount ${
+                        transaction.type === "Income"
+                          ? "amount-income"
+                          : "amount-expense"
+                      }`}
+                    >
+                      {transaction.type === "Income" ? "+" : "-"}
+                      {formatAmount(transaction.amount)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="empty-activity">
+                  <span>🧾</span>
+                  <h3>No recent activity</h3>
+                  <p>Your latest income and expenses will appear here.</p>
+                </div>
               )}
+            </div>
+          </div>
+        </section>
 
-              <br />
-              <br />
+        {/* QUICK ACTIONS */}
+        <section className="quick-actions">
+          <div>
+            <p className="section-kicker">QUICK ACTIONS</p>
+            <h2>Manage Your Money</h2>
+          </div>
 
+          <div className="quick-action-buttons">
             <button
-                type="button"
-                onClick={() => handleIncomeEdit(item)}
+              className="quick-btn expense-quick"
+              onClick={() => navigate("/expenses")}
             >
-                Edit
+              <span>↗</span>
+              <div>
+                <strong>Manage Expenses</strong>
+                <small>Add, edit or review expenses</small>
+              </div>
             </button>
 
-              {" "}
-
             <button
-                type="button"
-                onClick={() => handleIncomeDelete(item.id)}
+              className="quick-btn income-quick"
+              onClick={() => navigate("/income")}
             >
-                Delete
+              <span>↙</span>
+              <div>
+                <strong>Manage Income</strong>
+                <small>Track your income sources</small>
+              </div>
             </button>
 
-              <br />
-              <br />
-            </li>
-          ))}
-        </ul>
-      )}
+            <button
+              className="quick-btn budget-quick"
+              onClick={() => navigate("/budgets")}
+            >
+              <span>◫</span>
+              <div>
+                <strong>Manage Budgets</strong>
+                <small>Plan and monitor budgets</small>
+              </div>
+            </button>
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

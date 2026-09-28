@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import "./Register.css";
 
 function Register() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
-    role: "student",
   });
 
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -20,6 +21,7 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
 
     try {
       const response = await fetch(
@@ -37,74 +39,166 @@ function Register() {
 
       if (response.ok) {
         setMessage("Registration successful!");
-        console.log(data);
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 1000);
       } else {
-        setMessage(JSON.stringify(data));
+        setMessage(
+          data.error ||
+            data.detail ||
+            "Registration failed. Please check your details."
+        );
       }
     } catch (error) {
-      setMessage("Something went wrong. Please try again.");
       console.error(error);
+      setMessage("Something went wrong. Please try again.");
     }
   };
 
   return (
-    <div>
-      <h1>BudgetBuddy Registration</h1>
+    <div className="register-page">
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username</label>
-          <br />
-          <input
-            type="text"
-            name="username"
-            placeholder="Enter username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
+      {/* Left Branding */}
+      <div className="register-brand">
+
+        <div className="register-logo">
+          💰 BudgetBuddy
         </div>
 
-        <br />
+        <div className="register-brand-content">
 
-        <div>
-          <label>Email</label>
-          <br />
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+          <div className="register-badge">
+            🌊 Start Your Financial Journey
+          </div>
+
+          <h1>
+            Take control of
+            <span> your finances.</span>
+          </h1>
+
+          <p>
+            Create your BudgetBuddy account and start managing
+            your income, expenses, budgets, and financial goals
+            in one place.
+          </p>
+
+          <div className="register-features">
+
+            <div>
+              <span>💸</span>
+              <div>
+                <strong>Track Expenses</strong>
+                <small>Understand where your money goes.</small>
+              </div>
+            </div>
+
+            <div>
+              <span>💵</span>
+              <div>
+                <strong>Manage Income</strong>
+                <small>Keep your income organized.</small>
+              </div>
+            </div>
+
+            <div>
+              <span>🎯</span>
+              <div>
+                <strong>Plan Budgets</strong>
+                <small>Build better financial habits.</small>
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
-        <br />
+      </div>
 
-        <div>
-          <label>Password</label>
-          <br />
-          <input
-            type="password"
-            name="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+      {/* Register Section */}
+      <div className="register-section">
+
+        <div className="register-card">
+
+          <div className="register-header">
+            <h2>Create Account ✨</h2>
+            <p>Join BudgetBuddy and start budgeting smarter</p>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+
+            <div className="register-input-group">
+              <label>Username</label>
+
+              <input
+                type="text"
+                name="username"
+                placeholder="Enter your username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="register-input-group">
+              <label>Email</label>
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="register-input-group">
+              <label>Password</label>
+
+              <input
+                type="password"
+                name="password"
+                placeholder="Create a password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="register-submit"
+            >
+              Create Account →
+            </button>
+
+          </form>
+
+          {message && (
+            <p
+              className={
+                message === "Registration successful!"
+                  ? "register-success"
+                  : "register-error"
+              }
+            >
+              {message}
+            </p>
+          )}
+
+          <div className="login-link-text">
+            Already have an account?
+
+            <Link to="/login">
+              Sign in
+            </Link>
+          </div>
+
         </div>
 
-        <br />
+      </div>
 
-        <button type="submit">Register</button>
-      </form>
-
-      {message && <p>{message}</p>}
-
-      <p>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
     </div>
   );
 }

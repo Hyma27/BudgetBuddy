@@ -1,0 +1,420 @@
+/* ================================
+   OCEAN ROYALE - HOME PAGE
+================================ */
+
+.home-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 20%, rgba(0, 180, 216, 0.15), transparent 30%),
+    radial-gradient(circle at 90% 80%, rgba(30, 64, 175, 0.18), transparent 30%),
+    #06111f;
+  color: #f5fbff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* ================================
+   NAVBAR
+================================ */
+
+.home-navbar {
+  height: 76px;
+  padding: 0 7%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background: rgba(6, 17, 31, 0.8);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
+
+  backdrop-filter: blur(14px);
+}
+
+.home-logo {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.home-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.home-nav-links a {
+  color: #c9e9f7;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+.home-nav-links a:hover {
+  color: #67e8f9;
+}
+
+.nav-register {
+  padding: 10px 20px;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    135deg,
+    #0284c7,
+    #2563eb
+  );
+
+  color: white !important;
+
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.25);
+}
+
+/* ================================
+   HERO SECTION
+================================ */
+
+.home-content {
+  min-height: 550px;
+  padding: 70px 7%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 70px;
+}
+
+.home-text {
+  max-width: 650px;
+}
+
+.welcome-badge {
+  display: inline-block;
+
+  padding: 9px 16px;
+  margin-bottom: 22px;
+
+  border: 1px solid rgba(103, 232, 249, 0.2);
+  border-radius: 30px;
+
+  background: rgba(8, 145, 178, 0.1);
+
+  color: #67e8f9;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.home-text h1 {
+  margin: 0 0 24px;
+
+  font-size: 48px;
+  line-height: 1.15;
+  letter-spacing: -1px;
+}
+
+.home-text h1 span {
+  display: inline;
+  color: #38bdf8;
+}
+
+.home-text p {
+  margin-bottom: 32px;
+
+  color: #9fc3d5;
+
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+/* ================================
+   BUTTONS
+================================ */
+
+.home-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.home-buttons a {
+  padding: 14px 26px;
+
+  border-radius: 11px;
+
+  text-decoration: none;
+
+  font-weight: 700;
+
+  transition: 0.3s ease;
+}
+
+.get-started-btn {
+  background: linear-gradient(
+    135deg,
+    #0891b2,
+    #2563eb
+  );
+
+  color: white;
+
+  box-shadow:
+    0 10px 30px rgba(14, 165, 233, 0.25);
+}
+
+.get-started-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 35px rgba(14, 165, 233, 0.35);
+}
+
+.login-btn {
+  border: 1px solid rgba(125, 211, 252, 0.25);
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #e0f7ff;
+
+  backdrop-filter: blur(10px);
+}
+
+.login-btn:hover {
+  border-color: #38bdf8;
+  color: #67e8f9;
+}
+
+/* ================================
+   FINANCIAL CARD
+================================ */
+
+.home-card {
+  width: 400px;
+
+  padding: 25px;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(14, 116, 144, 0.18),
+      rgba(30, 64, 175, 0.12)
+    );
+
+  border: 1px solid rgba(125, 211, 252, 0.15);
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.45);
+
+  backdrop-filter: blur(18px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+
+  color: #9fc3d5;
+
+  font-size: 14px;
+}
+
+/* ================================
+   BALANCE
+================================ */
+
+.balance-card {
+  padding: 25px;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #075985,
+      #1d4ed8
+    );
+
+  box-shadow:
+    0 15px 35px rgba(29, 78, 216, 0.25);
+}
+
+.balance-card p {
+  margin: 0;
+
+  color: #c8edf9;
+
+  font-size: 14px;
+}
+
+.balance-card h2 {
+  margin: 10px 0;
+
+  font-size: 32px;
+}
+
+.balance-card span {
+  color: #a5f3fc;
+
+  font-size: 13px;
+}
+
+/* ================================
+   MINI CARDS
+================================ */
+
+.mini-cards {
+  display: flex;
+  gap: 15px;
+
+  margin-top: 15px;
+}
+
+.mini-card {
+  flex: 1;
+
+  padding: 18px;
+
+  border-radius: 15px;
+
+  background: rgba(255, 255, 255, 0.045);
+
+  border: 1px solid rgba(125, 211, 252, 0.08);
+}
+
+.mini-card p {
+  margin: 8px 0;
+
+  color: #8fb4c6;
+
+  font-size: 13px;
+}
+
+.mini-card h3 {
+  margin: 0;
+
+  color: #f1fbff;
+}
+
+/* ================================
+   FEATURE ROW
+================================ */
+
+.feature-row {
+  display: flex;
+  justify-content: space-between;
+
+  margin-top: 20px;
+
+  color: #a9d4e5;
+
+  font-size: 13px;
+}
+
+/* ================================
+   FEATURES
+================================ */
+
+.home-features {
+  padding: 30px 7% 70px;
+
+  display: flex;
+  justify-content: center;
+
+  gap: 25px;
+}
+
+.feature-box {
+  width: 250px;
+
+  padding: 25px;
+
+  text-align: center;
+
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(125, 211, 252, 0.1);
+
+  backdrop-filter: blur(12px);
+
+  transition: 0.3s ease;
+}
+
+.feature-box:hover {
+  transform: translateY(-5px);
+
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.feature-icon {
+  font-size: 30px;
+}
+
+.feature-box h3 {
+  margin-bottom: 8px;
+}
+
+.feature-box p {
+  color: #8fb4c6;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+/* ================================
+   RESPONSIVE
+================================ */
+
+@media (max-width: 900px) {
+
+  .home-content {
+    flex-direction: column;
+
+    text-align: center;
+
+    padding-top: 50px;
+  }
+
+  .home-buttons {
+    justify-content: center;
+  }
+
+  .home-card {
+    width: 90%;
+    max-width: 400px;
+  }
+
+  .home-features {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .home-navbar {
+    padding: 0 5%;
+  }
+
+  .home-text h1 {
+    font-size: 34px;
+  }
+
+  .home-text p {
+    font-size: 15px;
+  }
+
+  .home-nav-links {
+    gap: 10px;
+  }
+
+  .home-buttons {
+    flex-direction: column;
+  }
+
+  .home-buttons a {
+    text-align: center;
+  }
+}
