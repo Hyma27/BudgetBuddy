@@ -304,53 +304,29 @@ class ExpenseView(APIView):
                     )
             
 
-               # Create notification only when threshold is reached
+                # Create notification only when threshold is reached
                 if notification_type:
+                    month_label = (
+                        f"{expense.expense_date.year}-"
+                        f"{expense.expense_date.month:02d}"
+                    )
 
-                        month_label = (
-                            f"{expense.expense_date.year}-"
-                            f"{expense.expense_date.month:02d}"
+                    existing_notification = (
+                        Notification.objects.filter(
+                            user=request.user,
+                            notification_type=notification_type,
                         )
+                        .filter(message__contains=budget.category)
+                        .filter(message__contains=month_label)
+                        .exists()
+                    )
 
-                        existing_notification = (
-                            Notification.objects.filter(
-                                user=request.user,
-                                notification_type=notification_type,
-                            )
-                            .filter(message__contains=budget.category)
-                            .filter(message__contains=month_label)
-                            .exists()
+                    if not existing_notification:
+                        Notification.objects.create(
+                            user=request.user,
+                            notification_type=notification_type,
+                            message=message
                         )
-
-                        if not existing_notification:
-                            Notification.objects.create(
-                                user=request.user,
-                                notification_type=notification_type,
-                                message=message
-                            )
-                        # Create notification only when threshold is reached
-                        if notification_type:
-
-                                    existing_notification = Notification.objects.filter(
-                                        user=request.user,
-                                        notification_type=notification_type,
-                                        message__contains=budget.category,
-                                        is_read=False
-                                    ).filter(
-                                        message__contains=(
-                                            f"{expense.expense_date.year}-"
-                                            f"{expense.expense_date.month:02d}"
-                                    )
-                                    ).exists()
-                                        
-                    
-
-                                    if not existing_notification:
-                                        Notification.objects.create(
-                                            user=request.user,
-                                            notification_type=notification_type,
-                                            message=message
-                                        )
 
             return Response(
                 serializer.data,
@@ -449,6 +425,62 @@ class BudgetView(APIView):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def put(self, request, budget_id):
+        try:
+            budget = Budget.objects.get(
+                id=budget_id,
+                user=request.user
+            )
+        except Budget.DoesNotExist:
+            return Response(
+                {
+                    "error": "Budget not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = BudgetSerializer(
+            budget,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request, budget_id):
+        try:
+            budget = Budget.objects.get(
+                id=budget_id,
+                user=request.user
+            )
+        except Budget.DoesNotExist:
+            return Response(
+                {
+                    "error": "Budget not found"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        budget.delete()
+
+        return Response(
+            {
+                "message": "Budget deleted successfully"
+            },
+            status=status.HTTP_200_OK
         )
     
     

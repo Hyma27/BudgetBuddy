@@ -5,12 +5,23 @@ import Sidebar from "../components/Sidebar";
 import { API_BASE_URL } from "../config";
 import { formatCurrency, formatDateTime, formatFullMonthYear } from "../utils/formatters";
 
+const getInitialMonth = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}`;
+};
+
 function Reports() {
   const navigate = useNavigate();
 
   const [reports, setReports] = useState([]);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("error");
   const [downloadingId, setDownloadingId] = useState(null);
+
+  const [selectedMonth, setSelectedMonth] = useState(getInitialMonth);
+  const [generating, setGenerating] = useState(false);
 
   const fetchReports = async () => {
     const token = localStorage.getItem("access_token");
@@ -40,16 +51,69 @@ function Reports() {
         setMessage(
           data.detail || data.error || "Failed to load reports."
         );
+        setMessageType("error");
       }
     } catch (error) {
       console.error("Report connection error:", error);
       setMessage("Unable to connect to the backend.");
+      setMessageType("error");
     }
   };
 
   useEffect(() => {
     fetchReports();
   }, []);
+
+  const handleGenerateReport = async (e) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    if (!selectedMonth) {
+      setMessage("Please select a valid month.");
+      setMessageType("error");
+      return;
+    }
+
+    setGenerating(true);
+    setMessage("");
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/reports/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ month: selectedMonth }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage("Monthly report generated successfully.");
+        setMessageType("success");
+        await fetchReports();
+      } else {
+        console.error("Report generation error:", data);
+        setMessage(
+          data.error || data.detail || "Unable to generate report."
+        );
+        setMessageType("error");
+      }
+    } catch (error) {
+      console.error("Report generation network error:", error);
+      setMessage("Unable to connect to the backend server.");
+      setMessageType("error");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleDownload = async (report, type) => {
     const token = localStorage.getItem("access_token");
@@ -96,6 +160,7 @@ function Reports() {
           ? "Unable to download PDF report."
           : "Unable to download Excel report."
       );
+      setMessageType("error");
     } finally {
       setDownloadingId(null);
     }
@@ -122,17 +187,51 @@ function Reports() {
           </h1>
 
           <p>
-            View your generated monthly financial reports.
+            View and generate your monthly financial reports.
           </p>
 
         </header>
 
-        {/* MESSAGE */}
+        {/* MESSAGE TOAST */}
         {message && (
-          <p className="report-message">
+          <div className={`report-message ${messageType}`}>
             {message}
-          </p>
+          </div>
         )}
+
+        {/* GENERATE REPORT CARD */}
+        <div className="generate-report-card">
+          <div className="generate-report-header">
+            <p className="card-kicker">REPORT GENERATOR</p>
+            <h2>Generate Monthly Report</h2>
+          </div>
+
+          <form onSubmit={handleGenerateReport} className="generate-report-form">
+            <div className="form-group-inline">
+              <label htmlFor="report-month-select">Select Month</label>
+              <input
+                id="report-month-select"
+                type="month"
+                className="month-input"
+                value={selectedMonth}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setMessage("");
+                }}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="generate-btn"
+              disabled={generating}
+            >
+              <span>{generating ? "⌛" : "📊"}</span>
+              {generating ? "Generating..." : "Generate Report"}
+            </button>
+          </form>
+        </div>
 
         {/* REPORT SECTION */}
         <section className="reports-section">

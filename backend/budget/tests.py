@@ -550,7 +550,29 @@ class BudgetAlertAPITestCase(TestCase):
             "Food",
             notification.message
         )  
-    
+
+    def test_single_expense_event_creates_exactly_one_notification(self):
+        response = self.client.post(
+            "/api/expense/",
+            {
+                "title": "Single Alert Test Food",
+                "amount": 4200,
+                "category": "Food",
+                "expense_date": "2026-09-10",
+                "description": "Triggers alert once"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+
+        user_notifications = Notification.objects.filter(user=self.user)
+        self.assertEqual(user_notifications.count(), 1)
+
+        notification = user_notifications.first()
+        self.assertEqual(notification.user, self.user)
+        self.assertEqual(notification.notification_type, "Budget Near Limit Alert")
+        self.assertIn("Food", notification.message)
+
     def test_budget_limit_alert(self):
         response = self.client.post(
             "/api/expense/",
@@ -754,7 +776,105 @@ class BudgetAlertAPITestCase(TestCase):
             message__contains="Education"
         ).first()
         self.assertIsNone(education_notification)
-    
+
+
+class BudgetCRUDAPITestCase(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="budgetcruduser",
+            email="budgetcruduser@example.com",
+            password="Test@12345"
+        )
+        self.client = APIClient()
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+
+        self.budget = Budget.objects.create(
+            user=self.user,
+            amount=5000,
+            category="Food",
+            period="Monthly"
+        )
+
+    def test_budget_put_success(self):
+        response = self.client.put(
+            f"/api/budget/{self.budget.id}/",
+            {
+                "amount": 7500,
+                "category": "Food",
+                "period": "Monthly"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(float(data["amount"]), 7500.0)
+
+        self.budget.refresh_from_db()
+        self.assertEqual(float(self.budget.amount), 7500.0)
+
+    def test_budget_delete_success(self):
+        response = self.client.delete(f"/api/budget/{self.budget.id}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Budget.objects.filter(id=self.budget.id).exists())
+
+    def test_cross_user_put_protection(self):
+        other_user = User.objects.create_user(
+            username="otherbudgetcruduser",
+            email="otherbudgetcrud@example.com",
+            password="Test@12345"
+        )
+        other_client = APIClient()
+        refresh = RefreshToken.for_user(other_user)
+        other_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+
+        response = other_client.put(
+            f"/api/budget/{self.budget.id}/",
+            {
+                "amount": 10000
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 404)
+
+        self.budget.refresh_from_db()
+        self.assertEqual(float(self.budget.amount), 5000.0)
+
+    def test_cross_user_delete_protection(self):
+        other_user = User.objects.create_user(
+            username="otherbudgetcruduser2",
+            email="otherbudgetcrud2@example.com",
+            password="Test@12345"
+        )
+        other_client = APIClient()
+        refresh = RefreshToken.for_user(other_user)
+        other_client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+
+        response = other_client.delete(f"/api/budget/{self.budget.id}/")
+        self.assertEqual(response.status_code, 404)
+
+        self.assertTrue(Budget.objects.filter(id=self.budget.id).exists())
+
+    def test_unauthenticated_put_delete(self):
+        anonymous_client = APIClient()
+        put_response = anonymous_client.put(
+            f"/api/budget/{self.budget.id}/",
+            {"amount": 8000},
+            format="json"
+        )
+        self.assertEqual(put_response.status_code, 401)
+
+        del_response = anonymous_client.delete(f"/api/budget/{self.budget.id}/")
+        self.assertEqual(del_response.status_code, 401)
+
+
 class SavingsGoalAPITestCase(TestCase):
 
     def setUp(self):

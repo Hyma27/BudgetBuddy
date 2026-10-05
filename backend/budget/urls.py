@@ -11,6 +11,7 @@ urlpatterns = [
     path('expense/', ExpenseView.as_view(), name='expense'),
     path('expense/<int:expense_id>/', ExpenseView.as_view(), name='expense-detail'),
     path('budget/', BudgetView.as_view(), name='budget'),
+    path('budget/<int:budget_id>/', BudgetView.as_view(), name='budget-detail'),
     path('savings-goal/', SavingsGoalView.as_view(), name='savings-goal'),
     path('analytics/', AnalyticsView.as_view(), name='analytics'),
     path('savings-goal/<int:goal_id>/', SavingsGoalView.as_view(), name='savings-goal-detail'),

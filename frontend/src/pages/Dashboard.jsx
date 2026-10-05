@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import {
   PieChart,
@@ -22,8 +22,42 @@ import {
   formatCurrency,
   formatCompactCurrency,
   formatDate,
+  formatDateTime,
   formatMonthYear,
 } from "../utils/formatters";
+
+const NotificationBellIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
+const UserHeaderIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+function formatRelativeTime(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+
+  return formatDateTime(dateString);
+}
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -35,8 +69,49 @@ function Dashboard() {
   const [savingsGoals, setSavingsGoals] = useState([]);
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("Loading your financial overview...");
+  const [userProfile, setUserProfile] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationError, setNotificationError] = useState(false);
+
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
+
+  const userDropdownRef = useRef(null);
+  const notificationDropdownRef = useRef(null);
 
   const token = localStorage.getItem("access_token");
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target)
+      ) {
+        setIsUserDropdownOpen(false);
+      }
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(event.target)
+      ) {
+        setIsNotificationDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const toggleUserDropdown = () => {
+    setIsUserDropdownOpen((prev) => !prev);
+    setIsNotificationDropdownOpen(false);
+  };
+
+  const toggleNotificationDropdown = () => {
+    setIsNotificationDropdownOpen((prev) => !prev);
+    setIsUserDropdownOpen(false);
+  };
 
   useEffect(() => {
     if (!token) {
@@ -69,7 +144,8 @@ function Dashboard() {
           analyticsResponse,
           savingsResponse,
           profileResponse,
-        ] = await Promise.all([
+          notificationResponse,
+        ] = await Promise.allSettled([
           fetch(`${API_BASE_URL}/api/expense/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
@@ -88,39 +164,54 @@ function Dashboard() {
           fetch(`${API_BASE_URL}/api/profile/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch(`${API_BASE_URL}/api/notifications/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         if (
-          !expenseResponse.ok ||
-          !incomeResponse.ok ||
-          !budgetResponse.ok
+          expenseResponse.status === "rejected" ||
+          !expenseResponse.value?.ok ||
+          incomeResponse.status === "rejected" ||
+          !incomeResponse.value?.ok ||
+          budgetResponse.status === "rejected" ||
+          !budgetResponse.value?.ok
         ) {
           throw new Error("Unable to load financial data");
         }
 
-        const expenseData = await expenseResponse.json();
-        const incomeData = await incomeResponse.json();
-        const budgetData = await budgetResponse.json();
+        const expenseData = await expenseResponse.value.json();
+        const incomeData = await incomeResponse.value.json();
+        const budgetData = await budgetResponse.value.json();
 
         setExpenses(Array.isArray(expenseData) ? expenseData : []);
         setIncomes(Array.isArray(incomeData) ? incomeData : []);
         setBudgets(Array.isArray(budgetData) ? budgetData : []);
 
-        if (analyticsResponse.ok) {
-          const analyticsData = await analyticsResponse.json();
+        if (analyticsResponse.status === "fulfilled" && analyticsResponse.value?.ok) {
+          const analyticsData = await analyticsResponse.value.json();
           setAnalytics(analyticsData);
         }
 
-        if (savingsResponse.ok) {
-          const savingsData = await savingsResponse.json();
+        if (savingsResponse.status === "fulfilled" && savingsResponse.value?.ok) {
+          const savingsData = await savingsResponse.value.json();
           setSavingsGoals(Array.isArray(savingsData) ? savingsData : []);
         }
 
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json();
+        if (profileResponse.status === "fulfilled" && profileResponse.value?.ok) {
+          const profileData = await profileResponse.value.json();
+          setUserProfile(profileData);
           if (profileData.username) {
             setUsername(profileData.username);
           }
+        }
+
+        if (notificationResponse.status === "fulfilled" && notificationResponse.value?.ok) {
+          const notifData = await notificationResponse.value.json();
+          setNotifications(Array.isArray(notifData) ? notifData : []);
+          setNotificationError(false);
+        } else {
+          setNotificationError(true);
         }
 
         setMessage("Your financial overview is ready.");
@@ -137,6 +228,20 @@ function Dashboard() {
     if (!username) return "User";
     return username.charAt(0).toUpperCase() + username.slice(1);
   }, [username]);
+
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => !n.is_read).length;
+  }, [notifications]);
+
+  const displayUnreadBadge = unreadCount > 9 ? "9+" : unreadCount;
+
+  const latestNotifications = useMemo(() => {
+    if (!notifications || notifications.length === 0) return [];
+    const sorted = [...notifications].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
+    return sorted.slice(0, 2);
+  }, [notifications]);
 
   const totalIncome = useMemo(() => {
     if (analytics?.summary?.total_income !== undefined) {
@@ -249,9 +354,139 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="status-pill">
-            <span className="status-dot"></span>
-            {message}
+          <div className="topbar-right">
+            <div className="status-pill">
+              <span className="status-dot"></span>
+              {message}
+            </div>
+
+            <div className="header-actions">
+              {/* NOTIFICATION BELL */}
+              <div className="header-action-container" ref={notificationDropdownRef}>
+                <button
+                  className={`header-icon-btn ${
+                    isNotificationDropdownOpen ? "active" : ""
+                  }`}
+                  onClick={toggleNotificationDropdown}
+                  aria-label="Notifications"
+                  title="Notifications"
+                >
+                  <NotificationBellIcon />
+                  {unreadCount > 0 && (
+                    <span className="notification-badge">{displayUnreadBadge}</span>
+                  )}
+                </button>
+
+                {isNotificationDropdownOpen && (
+                  <div className="header-dropdown notification-dropdown">
+                    <div className="dropdown-title-bar">
+                      <h3>Notifications</h3>
+                      {unreadCount > 0 && (
+                        <span className="dropdown-unread-count">{unreadCount}</span>
+                      )}
+                    </div>
+
+                    <div className="dropdown-divider"></div>
+
+                    <div className="dropdown-list">
+                      {notificationError ? (
+                        <div className="dropdown-empty">Unable to load notifications</div>
+                      ) : notifications.length === 0 ? (
+                        <div className="dropdown-empty">No new notifications</div>
+                      ) : (
+                        latestNotifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`dropdown-notif-item ${
+                              notification.is_read ? "read" : "unread"
+                            }`}
+                          >
+                            <div className="notif-item-header">
+                              <span className="notif-icon">
+                                {notification.notification_type === "Budget Limit Alert"
+                                  ? "⚠️"
+                                  : "🔔"}
+                              </span>
+                              <strong className="notif-title">
+                                {notification.notification_type}
+                              </strong>
+                            </div>
+                            <p className="notif-message">{notification.message}</p>
+                            <span className="notif-time">
+                              {formatRelativeTime(notification.created_at)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="dropdown-divider"></div>
+
+                    <button
+                      className="dropdown-action-btn"
+                      onClick={() => {
+                        setIsNotificationDropdownOpen(false);
+                        navigate("/notifications");
+                      }}
+                    >
+                      <span>View all notifications</span>
+                      <span className="arrow">→</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* USER PROFILE */}
+              <div className="header-action-container" ref={userDropdownRef}>
+                <button
+                  className={`header-icon-btn ${isUserDropdownOpen ? "active" : ""}`}
+                  onClick={toggleUserDropdown}
+                  aria-label="User Profile"
+                  title="User Profile"
+                >
+                  <UserHeaderIcon />
+                </button>
+
+                {isUserDropdownOpen && (
+                  <div className="header-dropdown user-dropdown">
+                    <div className="user-dropdown-info">
+                      <div className="user-avatar">
+                        {(userProfile?.username || username || "U")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                      <div className="user-details">
+                        <strong className="user-name">
+                          {userProfile?.username || username || "User"}
+                        </strong>
+                        {userProfile?.email && (
+                          <span className="user-email">{userProfile.email}</span>
+                        )}
+                        <span className="user-role-badge">
+                          {userProfile?.role
+                            ? userProfile.role.charAt(0).toUpperCase() +
+                              userProfile.role.slice(1)
+                            : "Student"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="dropdown-divider"></div>
+
+                    <button
+                      className="dropdown-action-btn"
+                      onClick={() => {
+                        setIsUserDropdownOpen(false);
+                        navigate("/profile");
+                      }}
+                    >
+                      <span>Profile Settings</span>
+                      <span className="arrow">→</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 
@@ -263,7 +498,7 @@ function Dashboard() {
               <span className="summary-label">TOTAL INCOME</span>
             </div>
 
-            <h2>{formatCurrency(totalIncome)}</h2>
+            <h2>{formatCurrency(Math.abs(totalIncome))}</h2>
             <p>Money received</p>
           </div>
 
@@ -273,7 +508,7 @@ function Dashboard() {
               <span className="summary-label">TOTAL EXPENSES</span>
             </div>
 
-            <h2>{formatCurrency(totalExpenses)}</h2>
+            <h2>{formatCurrency(Math.abs(totalExpenses))}</h2>
             <p>Money spent</p>
           </div>
 
@@ -287,7 +522,7 @@ function Dashboard() {
               <span className="summary-label">NET SAVINGS</span>
             </div>
 
-            <h2>{formatCurrency(remainingAmount)}</h2>
+            <h2>{formatCurrency(Math.abs(remainingAmount))}</h2>
             <p>Income − Expenses</p>
           </div>
 
