@@ -9,12 +9,21 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
 } from "recharts";
 import "./Dashboard.css";
 import Sidebar from "../components/Sidebar";
+import { API_BASE_URL } from "../config";
+import {
+  formatCurrency,
+  formatCompactCurrency,
+  formatDate,
+  formatMonthYear,
+} from "../utils/formatters";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -38,7 +47,7 @@ function Dashboard() {
     const loadDashboard = async () => {
       try {
         const protectedResponse = await fetch(
-          "http://127.0.0.1:8000/api/protected/",
+          `${API_BASE_URL}/api/protected/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,22 +70,22 @@ function Dashboard() {
           savingsResponse,
           profileResponse,
         ] = await Promise.all([
-          fetch("http://127.0.0.1:8000/api/expense/", {
+          fetch(`${API_BASE_URL}/api/expense/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://127.0.0.1:8000/api/income/", {
+          fetch(`${API_BASE_URL}/api/income/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://127.0.0.1:8000/api/budget/", {
+          fetch(`${API_BASE_URL}/api/budget/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://127.0.0.1:8000/api/analytics/", {
+          fetch(`${API_BASE_URL}/api/analytics/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://127.0.0.1:8000/api/savings-goal/", {
+          fetch(`${API_BASE_URL}/api/savings-goal/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://127.0.0.1:8000/api/profile/", {
+          fetch(`${API_BASE_URL}/api/profile/`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -123,6 +132,11 @@ function Dashboard() {
 
     loadDashboard();
   }, [navigate, token]);
+
+  const displayName = useMemo(() => {
+    if (!username) return "User";
+    return username.charAt(0).toUpperCase() + username.slice(1);
+  }, [username]);
 
   const totalIncome = useMemo(() => {
     if (analytics?.summary?.total_income !== undefined) {
@@ -184,11 +198,7 @@ function Dashboard() {
       const exp = expenseTrends.find((e) => e.month === monthStr);
 
       const [year, monthNum] = monthStr.split("-");
-      const dateObj = new Date(Number(year), Number(monthNum) - 1, 1);
-      const monthLabel = dateObj.toLocaleDateString("en-IN", {
-        month: "short",
-        year: "2-digit",
-      });
+      const monthLabel = formatMonthYear(monthNum, year.slice(-2));
 
       return {
         month: monthLabel,
@@ -221,23 +231,6 @@ function Dashboard() {
       .slice(0, 6);
   }, [incomes, expenses]);
 
-  const formatAmount = (amount) => {
-    return `₹${Number(amount || 0).toLocaleString("en-IN", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
-
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
   return (
     <div className="dashboard">
 
@@ -249,8 +242,8 @@ function Dashboard() {
         {/* TOP BAR */}
         <header className="topbar">
           <div>
-            <p className="eyebrow">FINANCIAL OVERVIEW & ANALYTICS</p>
-            <h1>Welcome, {username || "User"} 👋</h1>
+            <p className="eyebrow">FINANCIAL OVERVIEW</p>
+            <h1>Welcome, {displayName} 👋</h1>
             <p className="topbar-subtitle">
               Intelligent financial insights, spending analytics, and progress tracking.
             </p>
@@ -270,7 +263,7 @@ function Dashboard() {
               <span className="summary-label">TOTAL INCOME</span>
             </div>
 
-            <h2>{formatAmount(totalIncome)}</h2>
+            <h2>{formatCurrency(totalIncome)}</h2>
             <p>Money received</p>
           </div>
 
@@ -280,7 +273,7 @@ function Dashboard() {
               <span className="summary-label">TOTAL EXPENSES</span>
             </div>
 
-            <h2>{formatAmount(totalExpenses)}</h2>
+            <h2>{formatCurrency(totalExpenses)}</h2>
             <p>Money spent</p>
           </div>
 
@@ -294,7 +287,7 @@ function Dashboard() {
               <span className="summary-label">NET SAVINGS</span>
             </div>
 
-            <h2>{formatAmount(remainingAmount)}</h2>
+            <h2>{formatCurrency(remainingAmount)}</h2>
             <p>Income − Expenses</p>
           </div>
 
@@ -407,9 +400,9 @@ function Dashboard() {
                   <BarChart data={monthlyTrendChartData} margin={{ top: 15, right: 15, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
                     <XAxis dataKey="month" stroke="#71849a" tick={{ fontSize: 11 }} />
-                    <YAxis stroke="#71849a" tick={{ fontSize: 11 }} tickFormatter={(val) => `₹${val}`} />
+                    <YAxis stroke="#71849a" tick={{ fontSize: 11 }} tickFormatter={formatCompactCurrency} />
                     <Tooltip
-                      formatter={(value) => [formatAmount(Number(value)), ""]}
+                      formatter={(value) => [formatCurrency(Number(value)), ""]}
                       contentStyle={{
                         background: "#071a35",
                         border: "1px solid rgba(56, 189, 248, 0.35)",
@@ -427,6 +420,84 @@ function Dashboard() {
                   <div className="empty-chart-icon">📈</div>
                   <h3>No monthly trend data</h3>
                   <p>Record income and expenses across months to see your trend.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* FINANCIAL TRENDS LINE CHART */}
+        <section className="dashboard-content-grid single-chart-grid">
+          <div className="section chart-section full-width-chart">
+            <div className="section-header">
+              <div>
+                <p className="section-kicker">FINANCIAL TRENDS</p>
+                <h2>Cash Flow Trends</h2>
+              </div>
+
+              <span className="section-badge">Over Time</span>
+            </div>
+
+            <div className="chart-wrapper">
+              {monthlyTrendChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart
+                    data={monthlyTrendChartData}
+                    margin={{ top: 15, right: 15, left: -10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(148, 163, 184, 0.1)"
+                    />
+                    <XAxis
+                      dataKey="month"
+                      stroke="#71849a"
+                      tick={{ fontSize: 11 }}
+                    />
+                    <YAxis
+                      stroke="#71849a"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={formatCompactCurrency}
+                    />
+                    <Tooltip
+                      formatter={(value) => [
+                        formatCurrency(Number(value)),
+                        "",
+                      ]}
+                      contentStyle={{
+                        background: "#071a35",
+                        border: "1px solid rgba(56, 189, 248, 0.35)",
+                        borderRadius: "12px",
+                        color: "#ffffff",
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="Income"
+                      stroke="#38bdf8"
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: "#38bdf8" }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Expenses"
+                      stroke="#fb7185"
+                      strokeWidth={2.5}
+                      dot={{ r: 4, fill: "#fb7185" }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="empty-chart">
+                  <div className="empty-chart-icon">📈</div>
+                  <h3>No monthly trend data</h3>
+                  <p>
+                    Record income and expenses across months to see your
+                    trend.
+                  </p>
                 </div>
               )}
             </div>
@@ -479,8 +550,8 @@ function Dashboard() {
                       </div>
 
                       <div className="goal-amounts">
-                        <span>Current: <strong>{formatAmount(current)}</strong></span>
-                        <span>Target: <strong>{formatAmount(target)}</strong></span>
+                        <span>Current: <strong>{formatCurrency(current)}</strong></span>
+                        <span>Target: <strong>{formatCurrency(target)}</strong></span>
                       </div>
                     </div>
                   );
@@ -488,7 +559,7 @@ function Dashboard() {
               ) : (
                 <div className="empty-savings">
                   <div className="empty-savings-icon">💎</div>
-                  <h3>Net Savings: {formatAmount(remainingAmount)}</h3>
+                  <h3>Net Savings: {formatCurrency(remainingAmount)}</h3>
                   <p>
                     Set up your savings goals in the platform to track milestone targets.
                   </p>
@@ -539,8 +610,9 @@ function Dashboard() {
                           : "amount-expense"
                       }`}
                     >
-                      {transaction.type === "Income" ? "+" : "-"}
-                      {formatAmount(transaction.amount)}
+                      {transaction.type === "Income"
+                        ? formatCurrency(transaction.amount, true)
+                        : formatCurrency(-transaction.amount)}
                     </div>
                   </div>
                 ))

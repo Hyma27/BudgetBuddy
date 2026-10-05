@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Register.css";
+import { API_BASE_URL } from "../config";
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ function Register() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/register/",
+        `${API_BASE_URL}/api/register/`,
         {
           method: "POST",
           headers: {

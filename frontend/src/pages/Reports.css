@@ -6,15 +6,17 @@
 }
 
 .reports-main {
-  margin-left: 245px;
-  width: calc(100% - 245px);
+  margin-left: var(--sidebar-width, 260px);
+  width: calc(100% - var(--sidebar-width, 260px));
   min-height: 100vh;
-  padding: 42px 45px 60px;
+  padding: 42px 48px 70px;
   box-sizing: border-box;
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 .reports-header {
-  margin-bottom: 35px;
+  text-align: left;
+  margin-bottom: 30px;
 }
 
 .reports-header h1 {
@@ -23,27 +25,28 @@
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.8px;
-  margin: 8px 0;
+  margin: 0;
 }
 
 .reports-header p {
   opacity: 0.75;
   color: #94a3b8;
   font-family: Inter, sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
   line-height: 1.5;
-  letter-spacing: normal;
+  margin-top: 8px;
 }
 
 .page-kicker {
   color: #38bdf8;
   font-family: Inter, sans-serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: 1.7px;
   text-transform: uppercase;
+  margin: 0 0 7px;
 }
 
 .report-message {
@@ -64,10 +67,12 @@
 }
 
 .section-heading p {
-  font-size: 12px;
-  letter-spacing: 1.5px;
-  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  font-weight: 800;
   color: #38bdf8;
+  text-transform: uppercase;
+  margin: 0 0 4px;
 }
 
 .section-heading h2 {
@@ -216,6 +221,65 @@
   color: #94a3b8;
 }
 
+.report-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.download-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  height: 40px;
+  border-radius: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.pdf-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(220, 38, 38, 0.25));
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.pdf-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.35));
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  transform: translateY(-1px);
+}
+
+.excel-btn {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.25));
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.excel-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.35));
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+  transform: translateY(-1px);
+}
+
+.download-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 @media (max-width: 1100px) {
   .reports-grid {
     grid-template-columns: 1fr;
@@ -234,6 +298,11 @@
   }
 
   .report-counts {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .report-card-actions {
     flex-direction: column;
     gap: 8px;
   }

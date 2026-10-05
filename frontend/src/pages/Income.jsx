@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import "./Income.css";
 import Sidebar from "../components/Sidebar";
+import { API_BASE_URL } from "../config";
+import { formatCurrency, formatDate } from "../utils/formatters";
 
 function Income() {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ function Income() {
   const fetchIncomes = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/income/",
+        `${API_BASE_URL}/api/income/`,
         {
           method: "GET",
           headers: {
@@ -121,8 +123,8 @@ function Income() {
     setMessage("");
 
     const url = editingIncomeId
-      ? `http://127.0.0.1:8000/api/income/${editingIncomeId}/`
-      : "http://127.0.0.1:8000/api/income/";
+      ? `${API_BASE_URL}/api/income/${editingIncomeId}/`
+      : `${API_BASE_URL}/api/income/`;
 
     const method = editingIncomeId ? "PUT" : "POST";
 
@@ -179,7 +181,7 @@ function Income() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/income/${id}/`,
+        `${API_BASE_URL}/api/income/${id}/`,
         {
           method: "DELETE",
           headers: {
@@ -308,7 +310,7 @@ function Income() {
               <span>Total Income</span>
 
               <strong>
-                {formatAmount(totalIncome)}
+                {formatCurrency(totalIncome, true)}
               </strong>
             </div>
 
@@ -321,7 +323,7 @@ function Income() {
             </div>
 
             <div>
-              <span>Total Transactions</span>
+              <span>Income Records</span>
 
               <strong>
                 {incomes.length}
@@ -340,7 +342,7 @@ function Income() {
               <span>Today's Income</span>
 
               <strong>
-                {formatAmount(todayIncome)}
+                {formatCurrency(todayIncome, true)}
               </strong>
             </div>
 
@@ -396,11 +398,10 @@ function Income() {
 
                 <thead>
                   <tr>
-                    <th>Income Source</th>
-                    <th>Source Type</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
+                    <th>INCOME SOURCE</th>
+                    <th>DATE</th>
+                    <th>AMOUNT</th>
+                    <th>ACTIONS</th>
                   </tr>
                 </thead>
 
@@ -436,18 +437,12 @@ function Income() {
 
                       </td>
 
-                      <td>
-                        <span className="source-pill">
-                          {item.source}
-                        </span>
-                      </td>
-
                       <td className="date-cell">
                         {formatDate(item.income_date)}
                       </td>
 
                       <td className="amount-cell">
-                        +{formatAmount(item.amount)}
+                        {formatCurrency(item.amount, true)}
                       </td>
 
                       <td>

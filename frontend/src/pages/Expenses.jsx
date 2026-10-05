@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import "./Expenses.css";
 import Sidebar from "../components/Sidebar";
+import { API_BASE_URL } from "../config";
+import { formatCurrency, formatDate } from "../utils/formatters";
 
 function Expenses() {
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ function Expenses() {
   const fetchExpenses = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/expense/",
+        `${API_BASE_URL}/api/expense/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -122,8 +124,8 @@ function Expenses() {
     setMessage("");
 
     const url = editingExpenseId
-      ? `http://127.0.0.1:8000/api/expense/${editingExpenseId}/`
-      : "http://127.0.0.1:8000/api/expense/";
+      ? `${API_BASE_URL}/api/expense/${editingExpenseId}/`
+      : `${API_BASE_URL}/api/expense/`;
 
     const method = editingExpenseId ? "PUT" : "POST";
 
@@ -181,7 +183,7 @@ function Expenses() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/expense/${id}/`,
+        `${API_BASE_URL}/api/expense/${id}/`,
         {
           method: "DELETE",
           headers: {
@@ -289,8 +291,8 @@ function Expenses() {
             </div>
 
             <div>
-              <span>Total Spent</span>
-              <strong>{formatAmount(totalExpenses)}</strong>
+              <span>Total Expenses</span>
+              <strong>{formatCurrency(totalExpenses)}</strong>
             </div>
           </div>
 
@@ -300,7 +302,7 @@ function Expenses() {
             </div>
 
             <div>
-              <span>Total Transactions</span>
+              <span>Expense Records</span>
               <strong>{expenses.length}</strong>
             </div>
           </div>
@@ -312,7 +314,7 @@ function Expenses() {
 
             <div>
               <span>Today's Spending</span>
-              <strong>{formatAmount(todayExpenses)}</strong>
+              <strong>{formatCurrency(todayExpenses)}</strong>
             </div>
           </div>
         </section>
@@ -352,11 +354,11 @@ function Expenses() {
               <table className="expense-table">
                 <thead>
                   <tr>
-                    <th>Expense</th>
-                    <th>Category</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
+                    <th>EXPENSE</th>
+                    <th>CATEGORY</th>
+                    <th>DATE</th>
+                    <th>AMOUNT</th>
+                    <th>ACTIONS</th>
                   </tr>
                 </thead>
 
@@ -390,7 +392,7 @@ function Expenses() {
                       </td>
 
                       <td className="amount-cell">
-                        -{formatAmount(item.amount)}
+                        {formatCurrency(-item.amount)}
                       </td>
 
                       <td>

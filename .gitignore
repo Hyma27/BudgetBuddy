@@ -10,6 +10,7 @@ __pycache__/
 # Environment variables / secrets
 .env
 .env.*
+!.env.example
 
 # Django
 db.sqlite3
@@ -20,6 +21,7 @@ node_modules/
 # Build files
 dist/
 build/
+staticfiles/
 
 # IDE
 .vscode/

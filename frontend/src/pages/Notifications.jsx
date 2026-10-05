@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import "./Notifications.css";
+import { API_BASE_URL } from "../config";
+import { formatDateTime } from "../utils/formatters";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const API_URL = `${API_BASE_URL}/api`;
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
@@ -74,7 +76,7 @@ function Notifications() {
 
         <header className="notifications-header">
           <div>
-            <p className="eyebrow">Alerts & Updates</p>
+            <p className="page-kicker">SYSTEM ALERTS</p>
             <h1>Notifications</h1>
             <p>
               Stay updated with your budgets, savings goals, and financial
@@ -135,9 +137,7 @@ function Notifications() {
                   <p>{notification.message}</p>
 
                   <small>
-                    {new Date(
-                      notification.created_at
-                    ).toLocaleString()}
+                    {formatDateTime(notification.created_at)}
                   </small>
                 </div>
 

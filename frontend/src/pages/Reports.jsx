@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Reports.css";
 import Sidebar from "../components/Sidebar";
+import { API_BASE_URL } from "../config";
+import { formatCurrency, formatDateTime, formatFullMonthYear } from "../utils/formatters";
 
 function Reports() {
   const navigate = useNavigate();
 
   const [reports, setReports] = useState([]);
   const [message, setMessage] = useState("");
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const fetchReports = async () => {
     const token = localStorage.getItem("access_token");
@@ -19,7 +22,7 @@ function Reports() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/reports/",
+        `${API_BASE_URL}/api/reports/`,
         {
           method: "GET",
           headers: {
@@ -47,6 +50,56 @@ function Reports() {
   useEffect(() => {
     fetchReports();
   }, []);
+
+  const handleDownload = async (report, type) => {
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const actionKey = `${report.id}-${type}`;
+    setDownloadingId(actionKey);
+    setMessage("");
+
+    try {
+      const endpoint =
+        type === "pdf"
+          ? `${API_BASE_URL}/api/reports/${report.id}/pdf/`
+          : `${API_BASE_URL}/api/reports/${report.id}/excel/`;
+
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Download failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `BudgetBuddy_${report.period}.${type === "pdf" ? "pdf" : "xlsx"}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error(`Error downloading ${type.toUpperCase()} report:`, error);
+      setMessage(
+        type === "pdf"
+          ? "Unable to download PDF report."
+          : "Unable to download Excel report."
+      );
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   return (
     <div className="reports-page">
@@ -145,7 +198,7 @@ function Reports() {
                     </div>
 
                     <span className="report-pill">
-                      {report.period}
+                      {formatFullMonthYear(report.period)}
                     </span>
 
                   </div>
@@ -157,14 +210,8 @@ function Reports() {
 
                   {/* REPORT INFORMATION */}
                   <p>
-                    Report ID: #{report.id}
-                  </p>
-
-                  <p>
                     Generated:{" "}
-                    {new Date(
-                      report.generated_at
-                    ).toLocaleString("en-IN")}
+                    {formatDateTime(report.generated_at)}
                   </p>
 
                   {/* FINANCIAL SUMMARY */}
@@ -177,13 +224,7 @@ function Reports() {
                       </span>
 
                       <strong>
-                        ₹
-                        {Number(
-                          report.summary?.total_income || 0
-                        ).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        {formatCurrency(report.summary?.total_income, true)}
                       </strong>
 
                     </div>
@@ -195,13 +236,7 @@ function Reports() {
                       </span>
 
                       <strong>
-                        ₹
-                        {Number(
-                          report.summary?.total_expenses || 0
-                        ).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        {formatCurrency(report.summary?.total_expenses)}
                       </strong>
 
                     </div>
@@ -209,17 +244,18 @@ function Reports() {
                     <div className="summary-item">
 
                       <span>
-                        Savings
+                        Net Savings
                       </span>
 
                       <strong>
-                        ₹
-                        {Number(
-                          report.summary?.savings || 0
-                        ).toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        {formatCurrency(
+                          report.summary?.savings !== undefined
+                            ? report.summary?.savings
+                            : report.summary?.net_savings || 0,
+                          (report.summary?.savings !== undefined
+                            ? report.summary?.savings
+                            : report.summary?.net_savings || 0) >= 0
+                        )}
                       </strong>
 
                     </div>
@@ -230,15 +266,38 @@ function Reports() {
                   <div className="report-counts">
 
                     <span>
-                      Income Records:{" "}
-                      {report.income_count || 0}
+                      Income Records: {report.income_count !== undefined ? report.income_count : 0}
                     </span>
 
                     <span>
-                      Expense Records:{" "}
-                      {report.expense_count || 0}
+                      Expense Records: {report.expense_count !== undefined ? report.expense_count : 0}
                     </span>
 
+                  </div>
+
+                  {/* REPORT ACTIONS */}
+                  <div className="report-card-actions">
+                    <button
+                      className="download-btn pdf-btn"
+                      onClick={() => handleDownload(report, "pdf")}
+                      disabled={downloadingId === `${report.id}-pdf`}
+                    >
+                      <span>📄</span>
+                      {downloadingId === `${report.id}-pdf`
+                        ? "Downloading..."
+                        : "Download PDF"}
+                    </button>
+
+                    <button
+                      className="download-btn excel-btn"
+                      onClick={() => handleDownload(report, "excel")}
+                      disabled={downloadingId === `${report.id}-excel`}
+                    >
+                      <span>📊</span>
+                      {downloadingId === `${report.id}-excel`
+                        ? "Downloading..."
+                        : "Download Excel"}
+                    </button>
                   </div>
 
                 </div>

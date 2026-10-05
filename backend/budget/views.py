@@ -15,8 +15,8 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from .models import User,Income,Expense,Budget,SavingsGoal,Notification,Report
-from .serializers import UserRegistrationSerializer,IncomeSerializer,ExpenseSerializer,BudgetSerializer,SavingsGoalSerializer,NotificationSerializer,ReportSerializer
+from .models import User, Profile, Income, Expense, Budget, SavingsGoal, Notification, Report
+from .serializers import UserRegistrationSerializer, ProfileSerializer, IncomeSerializer, ExpenseSerializer, BudgetSerializer, SavingsGoalSerializer, NotificationSerializer, ReportSerializer
 
 
 class RegisterView(APIView):
@@ -73,12 +73,45 @@ class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
         return Response({
             'message': 'You are authenticated successfully',
             'username': request.user.username,
             'email': request.user.email,
             'role': request.user.role,
-        })        
+            'monthly_income': profile.monthly_income,
+            'financial_preferences': profile.financial_preferences,
+        })
+
+    def put(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        if 'role' in data:
+            data.pop('role')
+
+        serializer = ProfileSerializer(
+            profile,
+            data=data,
+            context={'request': request},
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Profile updated successfully',
+                'username': request.user.username,
+                'email': request.user.email,
+                'role': request.user.role,
+                'monthly_income': profile.monthly_income,
+                'financial_preferences': profile.financial_preferences,
+            }, status=status.HTTP_200_OK)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )        
         
 class IncomeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1008,9 +1041,278 @@ class ReportView(APIView):
 
         return response
 
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+
+
 class ReportExcelView(ReportView):
     def get(self, request, report_id):
-        return self.excel(request, report_id)     
+        return self.excel(request, report_id)
+
+
+class ReportPDFView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, report_id):
+        try:
+            report = Report.objects.get(
+                id=report_id,
+                user=request.user
+            )
+        except Report.DoesNotExist:
+            return Response(
+                {"error": "Report not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        try:
+            selected_month = datetime.strptime(
+                report.period,
+                "%Y-%m"
+            )
+        except ValueError:
+            return Response(
+                {"error": "Invalid report period"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        incomes = Income.objects.filter(
+            user=request.user,
+            income_date__year=selected_month.year,
+            income_date__month=selected_month.month
+        ).order_by("income_date", "id")
+
+        expenses = Expense.objects.filter(
+            user=request.user,
+            expense_date__year=selected_month.year,
+            expense_date__month=selected_month.month
+        ).order_by("expense_date", "id")
+
+        budgets = Budget.objects.filter(
+            user=request.user
+        )
+
+        total_income = incomes.aggregate(
+            total=Sum("amount")
+        )["total"] or 0
+
+        total_expenses = expenses.aggregate(
+            total=Sum("amount")
+        )["total"] or 0
+
+        savings = total_income - total_expenses
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=letter,
+            rightMargin=36,
+            leftMargin=36,
+            topMargin=36,
+            bottomMargin=36
+        )
+        story = []
+
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            'DocTitle',
+            parent=styles['Heading1'],
+            fontSize=22,
+            leading=26,
+            textColor=colors.HexColor('#0f172a'),
+            fontName='Helvetica-Bold'
+        )
+
+        subtitle_style = ParagraphStyle(
+            'DocSubTitle',
+            parent=styles['Heading2'],
+            fontSize=13,
+            leading=16,
+            textColor=colors.HexColor('#0284c7'),
+            fontName='Helvetica-Bold'
+        )
+
+        section_heading_style = ParagraphStyle(
+            'SectionHeading',
+            parent=styles['Heading3'],
+            fontSize=13,
+            leading=17,
+            textColor=colors.HexColor('#1e293b'),
+            fontName='Helvetica-Bold',
+            spaceAfter=6
+        )
+
+        normal_style = ParagraphStyle(
+            'DocNormal',
+            parent=styles['Normal'],
+            fontSize=10,
+            leading=14,
+            textColor=colors.HexColor('#334155')
+        )
+
+        bold_style = ParagraphStyle(
+            'DocBold',
+            parent=styles['Normal'],
+            fontSize=10,
+            leading=14,
+            textColor=colors.HexColor('#0f172a'),
+            fontName='Helvetica-Bold'
+        )
+
+        # Header Section
+        story.append(Paragraph("BudgetBuddy", title_style))
+        story.append(Paragraph("Monthly Financial Report", subtitle_style))
+        story.append(Spacer(1, 10))
+
+        gen_date_str = report.generated_at.strftime('%d %b %Y, %H:%M') if report.generated_at else "-"
+
+        info_data = [
+            [Paragraph(f"<b>Username:</b> {request.user.username}", normal_style),
+             Paragraph(f"<b>Period:</b> {report.period}", normal_style)],
+            [Paragraph(f"<b>Generated Date:</b> {gen_date_str}", normal_style),
+             Paragraph(f"<b>Report ID:</b> #{report.id}", normal_style)]
+        ]
+        info_table = Table(info_data, colWidths=[270, 270])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
+            ('PADDING', (0, 0), (-1, -1), 8),
+            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        story.append(info_table)
+        story.append(Spacer(1, 15))
+
+        # Financial Summary Section
+        story.append(Paragraph("Financial Summary", section_heading_style))
+        summary_data = [
+            [Paragraph("<b>Metric</b>", bold_style), Paragraph("<b>Amount (₹)</b>", bold_style)],
+            [Paragraph("Total Income", normal_style), Paragraph(f"₹{total_income:,.2f}", bold_style)],
+            [Paragraph("Total Expenses", normal_style), Paragraph(f"₹{total_expenses:,.2f}", bold_style)],
+            [Paragraph("Net Savings", normal_style), Paragraph(f"₹{savings:,.2f}", bold_style)]
+        ]
+        summary_table = Table(summary_data, colWidths=[270, 270])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#0f172a')),
+            ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
+            ('PADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+            ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#f1f5f9')),
+            ('BACKGROUND', (0, 2), (-1, 2), colors.white),
+            ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#e0f2fe')),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 15))
+
+        # Expense History Section
+        story.append(Paragraph("Expense History", section_heading_style))
+        if expenses.exists():
+            exp_data = [[
+                Paragraph("<b>Title</b>", bold_style),
+                Paragraph("<b>Amount</b>", bold_style),
+                Paragraph("<b>Category</b>", bold_style),
+                Paragraph("<b>Date</b>", bold_style),
+                Paragraph("<b>Description</b>", bold_style)
+            ]]
+            for exp in expenses:
+                exp_data.append([
+                    Paragraph(str(exp.title), normal_style),
+                    Paragraph(f"₹{exp.amount:,.2f}", normal_style),
+                    Paragraph(str(exp.category), normal_style),
+                    Paragraph(str(exp.expense_date), normal_style),
+                    Paragraph(str(exp.description or "-"), normal_style)
+                ])
+            exp_table = Table(exp_data, colWidths=[110, 85, 95, 80, 170])
+            exp_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#334155')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('PADDING', (0, 0), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            story.append(exp_table)
+        else:
+            story.append(Paragraph("No expenses recorded for this period.", normal_style))
+        story.append(Spacer(1, 15))
+
+        # Income History Section
+        story.append(Paragraph("Income History", section_heading_style))
+        if incomes.exists():
+            inc_data = [[
+                Paragraph("<b>Source</b>", bold_style),
+                Paragraph("<b>Amount</b>", bold_style),
+                Paragraph("<b>Date</b>", bold_style),
+                Paragraph("<b>Description</b>", bold_style)
+            ]]
+            for inc in incomes:
+                inc_data.append([
+                    Paragraph(str(inc.source), normal_style),
+                    Paragraph(f"₹{inc.amount:,.2f}", normal_style),
+                    Paragraph(str(inc.income_date), normal_style),
+                    Paragraph(str(inc.description or "-"), normal_style)
+                ])
+            inc_table = Table(inc_data, colWidths=[140, 100, 100, 200])
+            inc_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0369a1')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('PADDING', (0, 0), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            story.append(inc_table)
+        else:
+            story.append(Paragraph("No income recorded for this period.", normal_style))
+        story.append(Spacer(1, 15))
+
+        # Budget Details Section
+        story.append(Paragraph("Budget Details", section_heading_style))
+        if budgets.exists():
+            bud_data = [[
+                Paragraph("<b>Category</b>", bold_style),
+                Paragraph("<b>Amount</b>", bold_style),
+                Paragraph("<b>Period</b>", bold_style)
+            ]]
+            for b in budgets:
+                bud_data.append([
+                    Paragraph(str(b.category), normal_style),
+                    Paragraph(f"₹{b.amount:,.2f}", normal_style),
+                    Paragraph(str(b.period), normal_style)
+                ])
+            bud_table = Table(bud_data, colWidths=[180, 180, 180])
+            bud_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('PADDING', (0, 0), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            story.append(bud_table)
+        else:
+            story.append(Paragraph("No budget allocation records found.", normal_style))
+        story.append(Spacer(1, 20))
+
+        # Footer
+        story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#cbd5e1'), spaceAfter=10))
+        footer_style = ParagraphStyle(
+            'DocFooter',
+            parent=styles['Normal'],
+            fontSize=8,
+            leading=10,
+            textColor=colors.HexColor('#64748b'),
+            alignment=1
+        )
+        story.append(Paragraph("Generated by BudgetBuddy — Student Finance System", footer_style))
+
+        doc.build(story)
+
+        pdf_data = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="BudgetBuddy_{report.period}.pdf"'
+        return response     
         
 class ProtectedView(APIView):
     permission_classes = [IsAuthenticated]

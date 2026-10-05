@@ -418,8 +418,55 @@ class ReportAPITestCase(TestCase):
             response.status_code,
             404
         )
-        
-        
+
+    def test_download_monthly_report_pdf(self):
+        create_response = self.client.post(
+            "/api/reports/",
+            {
+                "month": "2026-09"
+            },
+            format="json"
+        )
+        self.assertEqual(create_response.status_code, 201)
+        report_id = create_response.data["report"]["id"]
+
+        response = self.client.get(f"/api/reports/{report_id}/pdf/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("BudgetBuddy_2026-09.pdf", response["Content-Disposition"])
+        self.assertGreater(len(response.content), 0)
+        self.assertTrue(response.content.startswith(b"%PDF"))
+
+    def test_pdf_report_user_isolation(self):
+        create_response = self.client.post(
+            "/api/reports/",
+            {
+                "month": "2026-09"
+            },
+            format="json"
+        )
+        self.assertEqual(create_response.status_code, 201)
+        report_id = create_response.data["report"]["id"]
+
+        other_user = User.objects.create_user(
+            username="otherpdfuser",
+            email="otherpdfuser@example.com",
+            password="Test@12345"
+        )
+        refresh = RefreshToken.for_user(other_user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+
+        response = self.client.get(f"/api/reports/{report_id}/pdf/")
+        self.assertEqual(response.status_code, 404)
+
+    def test_unauthenticated_pdf_request(self):
+        client = APIClient()
+        response = client.get("/api/reports/1/pdf/")
+        self.assertEqual(response.status_code, 401)
+
+
 class BudgetAlertAPITestCase(TestCase):
 
     def setUp(self):
@@ -763,3 +810,122 @@ class SavingsGoalAPITestCase(TestCase):
 
         # Only one milestone notification should exist
         self.assertEqual(notifications.count(), 1)
+
+
+class ProfileAPITestCase(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="profiletestuser",
+            email="profiletestuser@example.com",
+            password="Test@12345",
+            role="student"
+        )
+        self.client = APIClient()
+        refresh = RefreshToken.for_user(self.user)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}"
+        )
+
+    def test_get_profile_authenticated(self):
+        response = self.client.get("/api/profile/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["username"], "profiletestuser")
+        self.assertEqual(data["email"], "profiletestuser@example.com")
+        self.assertEqual(data["role"], "student")
+
+    def test_put_profile_update(self):
+        response = self.client.put(
+            "/api/profile/",
+            {
+                "username": "updatedprofileuser",
+                "email": "updatedprofileuser@example.com",
+                "monthly_income": 35000,
+                "financial_preferences": "Save for emergency fund"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["username"], "updatedprofileuser")
+        self.assertEqual(data["email"], "updatedprofileuser@example.com")
+        self.assertEqual(float(data["monthly_income"]), 35000.0)
+        self.assertEqual(data["financial_preferences"], "Save for emergency fund")
+
+    def test_negative_monthly_income_rejected(self):
+        response = self.client.put(
+            "/api/profile/",
+            {
+                "monthly_income": -5000
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_role_cannot_be_updated_via_put(self):
+        response = self.client.put(
+            "/api/profile/",
+            {
+                "role": "admin"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["role"], "student")
+
+    def test_unauthenticated_profile_request_rejected(self):
+        client = APIClient()
+        response = client.get("/api/profile/")
+        self.assertEqual(response.status_code, 401)
+
+
+class RegistrationSecurityAPITestCase(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_normal_registration_creates_student(self):
+        response = self.client.post(
+            "/api/register/",
+            {
+                "username": "newstudentuser",
+                "email": "newstudent@example.com",
+                "password": "Password@123"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(username="newstudentuser")
+        self.assertEqual(user.role, "student")
+
+    def test_registration_with_admin_role_ignored(self):
+        response = self.client.post(
+            "/api/register/",
+            {
+                "username": "attemptedadminuser",
+                "email": "attemptedadmin@example.com",
+                "password": "Password@123",
+                "role": "admin"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(username="attemptedadminuser")
+        self.assertEqual(user.role, "student")
+
+    def test_registration_with_premium_role_ignored(self):
+        response = self.client.post(
+            "/api/register/",
+            {
+                "username": "attemptedpremiumuser",
+                "email": "attemptedpremium@example.com",
+                "password": "Password@123",
+                "role": "premium"
+            },
+            format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(username="attemptedpremiumuser")
+        self.assertEqual(user.role, "student")

@@ -7,8 +7,11 @@ import Home from "./pages/Home";
 import Expenses from "./pages/Expenses";
 import Income from "./pages/Income";
 import Budgets from "./pages/Budgets";
+import SavingsGoals from "./pages/SavingsGoals";
+import Transactions from "./pages/Transactions";
 import Notifications from "./pages/Notifications";
 import Reports from "./pages/Reports";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -21,8 +24,11 @@ function App() {
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/income" element={<Income />} />
         <Route path="/budgets" element={<Budgets />} />
+        <Route path="/savings-goals" element={<SavingsGoals />} />
+        <Route path="/transactions" element={<Transactions />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );

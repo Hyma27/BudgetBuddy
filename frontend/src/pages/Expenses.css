@@ -60,255 +60,7 @@
   z-index: 0;
 }
 
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
 
-.expenses-page .sidebar {
-  position: fixed;
-
-  top: 0;
-  left: 0;
-
-  width: 245px;
-  min-height: 100vh;
-
-  display: flex;
-  flex-direction: column;
-
-  padding: 26px 16px;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(8, 19, 39, 0.97),
-      rgba(4, 12, 26, 0.99)
-    );
-
-  border-right: 1px solid rgba(148, 163, 184, 0.10);
-
-  box-shadow:
-    15px 0 50px rgba(0, 0, 0, 0.30);
-
-  backdrop-filter: blur(25px);
-
-  z-index: 20;
-}
-
-.expenses-page .brand {
-  display: flex;
-  align-items: center;
-
-  gap: 12px;
-
-  padding: 7px 8px;
-
-  margin-bottom: 42px;
-}
-
-.expenses-page .brand-icon {
-  width: 43px;
-  height: 43px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 13px;
-
-  background:
-    linear-gradient(
-      135deg,
-      #2563eb,
-      #0891b2
-    );
-
-  color: white;
-
-  font-size: 20px;
-  font-weight: 800;
-
-  box-shadow:
-    0 0 28px rgba(37, 99, 235, 0.28);
-}
-
-.expenses-page .brand h2 {
-  margin: 0;
-
-  color: #f8fbff;
-
-  font-size: 19px;
-  font-weight: 800;
-}
-
-.expenses-page .brand span {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #71839d;
-
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.expenses-page .sidebar-nav {
-  display: flex;
-  flex-direction: column;
-
-  gap: 7px;
-}
-
-.expenses-page .nav-item {
-  position: relative;
-
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-
-  gap: 13px;
-
-  padding: 13px 14px;
-
-  border-radius: 12px;
-
-  color: #8192aa;
-
-  font-size: 13px;
-  font-weight: 650;
-
-  text-decoration: none;
-
-  transition:
-    background 0.25s ease,
-    color 0.25s ease,
-    transform 0.25s ease;
-
-  overflow: hidden;
-}
-
-.expenses-page .nav-item span {
-  width: 22px;
-  height: 22px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  flex-shrink: 0;
-
-  border-radius: 7px;
-
-  background: rgba(148, 163, 184, 0.06);
-
-  color: #8da1ba;
-
-  font-size: 16px;
-}
-
-.expenses-page .nav-item:hover {
-  color: #dcecff;
-
-  background: rgba(37, 99, 235, 0.08);
-
-  transform: translateX(3px);
-}
-
-.expenses-page .nav-item.active {
-  color: white;
-
-  background:
-    linear-gradient(
-      100deg,
-      rgba(37, 99, 235, 0.90),
-      rgba(8, 145, 178, 0.85)
-    );
-
-  box-shadow:
-    0 8px 28px rgba(37, 99, 235, 0.20);
-}
-
-.expenses-page .nav-item.active span {
-  color: white;
-
-  background: rgba(255, 255, 255, 0.12);
-}
-
-/* Sidebar bottom */
-
-.expenses-page .sidebar-bottom {
-  margin-top: auto;
-}
-
-.expenses-page .sidebar-tip {
-  display: flex;
-
-  gap: 10px;
-
-  padding: 13px;
-
-  margin-bottom: 15px;
-
-  border-radius: 12px;
-
-  background: rgba(255, 255, 255, 0.025);
-
-  border: 1px solid rgba(148, 163, 184, 0.08);
-}
-
-.expenses-page .sidebar-tip > span {
-  font-size: 17px;
-}
-
-.expenses-page .sidebar-tip strong {
-  color: #cbd9ea;
-
-  font-size: 11px;
-}
-
-.expenses-page .sidebar-tip p {
-  margin: 4px 0 0;
-
-  color: #667992;
-
-  font-size: 9px;
-}
-
-.expenses-page .logout-btn {
-  width: 100%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  padding: 10px 15px;
-
-  border: 1px solid rgba(148, 163, 184, 0.12);
-
-  border-radius: 10px;
-
-  background: rgba(255, 255, 255, 0.025);
-
-  color: #a8b7c9;
-
-  font-size: 12px;
-  font-weight: 650;
-
-  cursor: pointer;
-
-  transition: 0.25s ease;
-}
-
-.expenses-page .logout-btn:hover {
-  color: #fda4af;
-
-  background: rgba(244, 63, 94, 0.07);
-
-  border-color: rgba(244, 63, 94, 0.18);
-}
 
 /* =========================================================
    MAIN
@@ -319,13 +71,15 @@
 
   z-index: 1;
 
-  width: calc(100% - 245px);
+  width: calc(100% - var(--sidebar-width, 260px));
 
   min-height: 100vh;
 
-  margin-left: 245px;
+  margin-left: var(--sidebar-width, 260px);
 
-  padding: 42px 45px 60px;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+
+  padding: 42px 48px 70px;
 
   background-image:
     linear-gradient(
@@ -353,7 +107,7 @@
 
   gap: 25px;
 
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 
   animation: contentEnter 0.55s ease forwards;
 }
@@ -365,7 +119,7 @@
 
   font-family: Inter, sans-serif;
 
-  font-size: 9px;
+  font-size: 10px;
 
   font-weight: 800;
 
@@ -393,13 +147,13 @@
 }
 
 .expenses-header p:last-child {
-  margin: 7px 0 0;
+  margin: 8px 0 0;
 
   color: #74869e;
 
   font-family: Inter, sans-serif;
 
-  font-size: 12px;
+  font-size: 13px;
 
   font-weight: 400;
 
@@ -421,10 +175,11 @@
 
   gap: 9px;
 
-  padding: 12px 18px;
+  height: 46px;
+  padding: 0 20px;
 
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
 
   background:
     linear-gradient(
@@ -435,8 +190,8 @@
 
   color: white;
 
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 800;
 
   cursor: pointer;
 
@@ -522,9 +277,9 @@
   grid-template-columns:
     repeat(3, minmax(0, 1fr));
 
-  gap: 16px;
+  gap: 18px;
 
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .expense-summary-card {
@@ -533,13 +288,13 @@
   display: flex;
   align-items: center;
 
-  gap: 14px;
+  gap: 16px;
 
-  min-height: 105px;
+  min-height: 130px;
 
-  padding: 19px;
+  padding: 26px 28px;
 
-  border-radius: 16px;
+  border-radius: 18px;
 
   background:
     linear-gradient(
@@ -613,8 +368,8 @@
   position: relative;
   z-index: 2;
 
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 
   flex-shrink: 0;
 
@@ -624,7 +379,7 @@
 
   border-radius: 12px;
 
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
 
   transition: transform 0.25s ease;
@@ -665,19 +420,23 @@
 
   color: #72869d;
 
-  font-size: 9px;
+  font-size: 10px;
 
-  font-weight: 700;
+  font-weight: 800;
 
-  letter-spacing: 0.7px;
+  letter-spacing: 1.3px;
+
+  text-transform: uppercase;
 }
 
 .expense-summary-card strong {
   color: #f6faff;
 
-  font-size: 21px;
+  font-size: 28px;
 
   font-weight: 800;
+
+  line-height: 1.2;
 
   text-shadow:
     0 0 16px rgba(56, 189, 248, 0.06);
@@ -1399,15 +1158,7 @@
 }
 
 @media (max-width: 850px) {
-  .expenses-page .sidebar {
-    width: 210px;
-  }
-
   .expenses-main {
-    width: calc(100% - 210px);
-
-    margin-left: 210px;
-
     padding: 27px;
   }
 
@@ -1423,18 +1174,6 @@
 }
 
 @media (max-width: 700px) {
-  .expenses-page .sidebar {
-    display: none;
-  }
-
-  .expenses-main {
-    width: 100%;
-
-    margin-left: 0;
-
-    padding: 22px 16px 45px;
-  }
-
   .expenses-header h1 {
     font-size: 26px;
   }
