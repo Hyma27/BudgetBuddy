@@ -1,34 +1,37 @@
 import { Link } from "react-router-dom";
+import logo from "../assets/hero.png";
 import "./Home.css";
 
 function Home() {
   return (
     <div className="home-page">
-
+      {/* Navbar */}
       <nav className="home-navbar">
         <div className="home-logo">
-          💰 BudgetBuddy
+          <img src={logo} alt="BudgetBuddy Logo" className="brand-logo-img" />
+          <span className="brand-name">BudgetBuddy</span>
         </div>
 
         <div className="home-nav-links">
-          <Link to="/login">Login</Link>
+          <Link to="/login" className="nav-login">
+            Login
+          </Link>
           <Link to="/register" className="nav-register">
             Register
           </Link>
         </div>
       </nav>
 
+      {/* Hero Section */}
       <main className="home-content">
-
         <div className="home-text">
-
           <div className="welcome-badge">
             ✨ Smart Financial Management for Students
           </div>
 
           <h1>
             Intelligent Student Budget Planning and
-            <span> Personal Expense Management Platform</span>
+            <span> Personal Expense Management</span>
           </h1>
 
           <p>
@@ -45,69 +48,39 @@ function Home() {
               Login
             </Link>
           </div>
-
         </div>
 
-        <div className="home-card">
-
-          <div className="card-header">
-            <span>Financial Overview</span>
-            <span>•••</span>
-          </div>
-
-          <div className="balance-card">
-            <p>Total Balance</p>
-            <h2>₹12,450</h2>
-            <span>↑ 12.5% this month</span>
-          </div>
-
-          <div className="mini-cards">
-
-            <div className="mini-card">
-              <div>💵</div>
-              <p>Income</p>
-              <h3>₹18,000</h3>
-            </div>
-
-            <div className="mini-card">
-              <div>💸</div>
-              <p>Expenses</p>
-              <h3>₹5,550</h3>
-            </div>
-
-          </div>
-
-          <div className="feature-row">
-            <span>🎯 Budget Planning</span>
-            <span>📊 Expense Tracking</span>
-          </div>
-
+        {/* Hero Right: Official BudgetBuddy Logo */}
+        <div className="home-hero-image-wrapper">
+          <div className="hero-glow"></div>
+          <img
+            src={logo}
+            alt="BudgetBuddy Official Logo"
+            className="home-hero-logo"
+          />
         </div>
-
       </main>
 
+      {/* Features Section */}
       <section className="home-features">
-
         <div className="feature-box">
           <div className="feature-icon">💰</div>
           <h3>Track Income</h3>
-          <p>Keep your income records organized.</p>
+          <p>Keep your income records organized and easily accessible.</p>
         </div>
 
         <div className="feature-box">
           <div className="feature-icon">💸</div>
           <h3>Manage Expenses</h3>
-          <p>Track and categorize your daily spending.</p>
+          <p>Track and categorize your daily spending in real-time.</p>
         </div>
 
         <div className="feature-box">
           <div className="feature-icon">🎯</div>
           <h3>Plan Your Budget</h3>
-          <p>Set budgets and manage your spending wisely.</p>
+          <p>Set custom budgets, track progress, and build savings.</p>
         </div>
-
       </section>
-
     </div>
   );
 }

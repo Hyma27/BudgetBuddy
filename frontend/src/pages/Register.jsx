@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/hero.png";
 import "./Register.css";
 import { API_BASE_URL } from "../config";
 
@@ -60,12 +61,13 @@ function Register() {
   return (
     <div className="register-page">
 
-      {/* Left Branding */}
+      {/* Left Brand Panel */}
       <div className="register-brand">
 
-        <div className="register-logo">
-          💰 BudgetBuddy
-        </div>
+        <Link to="/" className="register-logo">
+          <img src={logo} alt="BudgetBuddy Logo" className="brand-logo-img" />
+          <span className="brand-name">BudgetBuddy</span>
+        </Link>
 
         <div className="register-brand-content">
 
@@ -116,12 +118,15 @@ function Register() {
 
       </div>
 
-      {/* Register Section */}
+      {/* Right Register Section */}
       <div className="register-section">
 
         <div className="register-card">
 
           <div className="register-header">
+            <div className="card-logo-wrapper">
+              <img src={logo} alt="BudgetBuddy Official Logo" className="card-logo-img" />
+            </div>
             <h2>Create Account ✨</h2>
             <p>Join BudgetBuddy and start budgeting smarter</p>
           </div>

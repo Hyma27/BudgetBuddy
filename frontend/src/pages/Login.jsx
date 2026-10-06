@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/hero.png";
 import "./Login.css";
 import { API_BASE_URL } from "../config";
 
@@ -56,17 +57,18 @@ function Login() {
   return (
     <div className="login-page">
 
-      {/* Left Side */}
+      {/* Left Brand Panel */}
       <div className="login-brand">
 
-        <div className="login-logo">
-          💰 BudgetBuddy
-        </div>
+        <Link to="/" className="login-logo">
+          <img src={logo} alt="BudgetBuddy Logo" className="brand-logo-img" />
+          <span className="brand-name">BudgetBuddy</span>
+        </Link>
 
         <div className="brand-content">
 
           <div className="brand-badge">
-             Smart Financial Management
+            ✨ Smart Financial Management
           </div>
 
           <h1>
@@ -89,12 +91,15 @@ function Login() {
 
       </div>
 
-      {/* Login Section */}
+      {/* Right Login Section */}
       <div className="login-section">
 
         <div className="login-card">
 
           <div className="login-header">
+            <div className="card-logo-wrapper">
+              <img src={logo} alt="BudgetBuddy Official Logo" className="card-logo-img" />
+            </div>
             <h2>Welcome Back 👋</h2>
             <p>Sign in to continue to BudgetBuddy</p>
           </div>
