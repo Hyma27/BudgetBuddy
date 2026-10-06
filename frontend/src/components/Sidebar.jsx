@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import logo from "../assets/hero.png";
 import "./Sidebar.css";
 
 // SVG Outline Icons (Clean Finance/Dashboard Style)
@@ -114,7 +115,7 @@ function Sidebar() {
       {/* Brand Header */}
       <div className="brand">
         <div className="brand-logo-area">
-          <div className="brand-icon">₹</div>
+          <img src={logo} alt="BudgetBuddy Logo" className="brand-logo-img" />
         </div>
         <div className="brand-text">
           <h2>

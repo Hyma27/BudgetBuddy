@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import logo from "../assets/hero.png";
+import heroEmblem from "../assets/hero-emblem.png";
 import "./Home.css";
 
 function Home() {
@@ -50,12 +51,12 @@ function Home() {
           </div>
         </div>
 
-        {/* Hero Right: Official BudgetBuddy Logo */}
+        {/* Hero Right: Fintech Financial Emblem (Option 1 Logo without wordmark) */}
         <div className="home-hero-image-wrapper">
           <div className="hero-glow"></div>
           <img
-            src={logo}
-            alt="BudgetBuddy Official Logo"
+            src={heroEmblem}
+            alt="BudgetBuddy Financial Emblem"
             className="home-hero-logo"
           />
         </div>
